@@ -6,7 +6,7 @@ setup mu2etools
 setup gridexport
 setup dhtools
 
-DSCONF=rerun
+DSCONF=reco
 MAINDIR=`pwd`
 WFPROJ=CRY_MT2
 TAG=`date +"%y%m%d%H%M%S"`
@@ -38,7 +38,7 @@ submit_job () {
     command="mu2eprodsys --clustername="${JN}" --fcllist=$SF --wfproject=$WFPROJ --dsconf=$DSCONF \
       --dsowner=oksuzian --OS=SL6 ${RESOURCE} --expected-lifetime=23h --code=$CODE \
       --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC"
-    echo "Sumbitting: " $command
+    echo "Submitting: " $command
     echo `$command` > $LN 2>&1
     RC=$?
 
@@ -63,9 +63,10 @@ elif [ "$DSCONF" == "digi" ]; then
     INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry1_concat.txt
     MERGE=10
 elif [ "$DSCONF" == "reco" ]; then
-    INFCL=Offline/JobConfig/reco/mcdigis_primary.fcl
+    #INFCL=Offline/JobConfig/reco/mcdigis_primary.fcl  #####This is useful for a purely cosmic CRY sample
+    INFCL=Offline/JobConfig/reco/mcdigis_CRY.fcl  ##This is useful for a mixed cry sample
 #    INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/cry_filelist_trkana_cry1_miss2.txt
-    INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry2_digi.txt
+    INLIST=/mu2e/app/users/bbarton/dig.mu2e.CRY-cosmic-general-mix.MDC2018g_testBatch.txt
     MERGE=5
 
 elif [ "$DSCONF" == "rerun" ]; then
