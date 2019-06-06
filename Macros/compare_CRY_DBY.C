@@ -8,11 +8,12 @@ TTree *tree_cry;
 TTree *tree_dby;
 
 void Compare_two_plots(std::string variable, const char* cut, int cut_version=0){
+  gStyle->SetOptStat(0); 
 
   TCanvas *c1 = new TCanvas("c1","c1",1800,600);
 
-  tree_cry->Draw(Form("%s>>hCRY", variable.c_str()),"", "hist");
-  tree_dby->Draw(Form("%s>>hDBY", variable.c_str()),"", "same hist");
+  tree_cry->Draw(Form("%s>>hCRY", variable.c_str()),"", "goff");
+  tree_dby->Draw(Form("%s>>hDBY", variable.c_str()),"", "goff");
   TH1F *hCRY = (TH1F*)gDirectory->Get("hCRY");
   TH1F *hDBY = (TH1F*)gDirectory->Get("hDBY");
 
@@ -20,33 +21,33 @@ void Compare_two_plots(std::string variable, const char* cut, int cut_version=0)
   hDBY->SetLineColor(kRed);
   hCRY->SetNormFactor(1.);
   hDBY->SetNormFactor(1.);
-  hCRY->GetYaxis()->SetCanExtend(true);
+  hCRY->SetYTitle("Count (normalized)");
+  hDBY->SetYTitle("Count (normalized)");
+  hCRY->GetYaxis()->SetCanExtend(true);  
 
-  double maxCRY = hCRY->GetBinCenter(hCRY->GetMaximumBin());
-  double maxDBY = hCRY->GetBinCenter(hDBY->GetMaximumBin());
+  string xTitle = "";
+  cout << "Enter a title for the x-axis for variable = " << variable << endl;
+  cin >> xTitle;
+  // xTitle = getXaxisTitle(variable);
+  hCRY->SetXTitle(xTitle.c_str());
+  hDBY->SetXTitle(xTitle.c_str());
 
+  double maxCRY = hCRY->GetBinContent(hCRY->GetMaximumBin())*hCRY->Integral();
+  double maxDBY = hCRY->GetBinContent(hDBY->GetMaximumBin())*hDBY->Integral();
+  
   if (maxDBY > maxCRY)
     {
       cout <<"maxCRY = " << maxCRY << " and maxDBY = " << maxDBY<< endl;
-      hCRY->SetMaximum(25 * maxDBY);
-    }
-  
+      hDBY->Draw();
+      hCRY->Draw("same");
+      }
+  else
+    {
+      hCRY->Draw();
+      hDBY->Draw("same");
+    }  
 
-  /*double maxCry = hCRY->GetXaxis()->GetBinCenter(hCRY->GetMaximumBin());
-  double maxDby = hDBY->GetXaxis()->GetBinCenter(hDBY->GetMaximumBin());
-
-  if(maxCry > maxDby){
-    hCRY->Draw(); 
-    hDBY->Draw("same");
-   }
-  else{
-     hDBY->Draw();
-     hCRY->Draw("same"); 
-     }*/
-    
-  
-
-  TLegend *leg = new TLegend(0.0,0.9,0.1,1.0);
+  TLegend *leg = new TLegend(0.8,0.8,0.9,0.9);
   leg->AddEntry(hCRY,Form("CRY: %d", (int)hCRY->GetEntries()),"l");
   leg->AddEntry(hDBY,Form("DBY: %d", (int)hDBY->GetEntries()),"l");
   leg->Draw("same");
@@ -57,10 +58,15 @@ void Compare_two_plots(std::string variable, const char* cut, int cut_version=0)
     if(variable[i] != ']' && variable[i] != '[' && variable[i] != '_') plot_name += variable[i];
 
   c1->SaveAs(Form("plots/%s_%d.pdf", plot_name.c_str(), cut_version));
+  
+  string buffer = "";
+  cout << "Enter any character to see log plot" <<endl;
+  cin >> buffer;
   c1->SetLogy();
   c1->SaveAs(Form("plots/%s_%d_log.pdf", plot_name.c_str(), cut_version));
   hCRY->Delete();
   hDBY->Delete();
+  //c1->Close();
 
 }
 
@@ -117,8 +123,6 @@ void compare_CRY_DBY(){
   std::string signal_all = all_cuts_MDC+"&& crvinfomc._z[0]>13000";
   // std::string signal_all = all_cuts_MDC;
 
-  string buff = "";
-
   // Compare_two_plots("ncrv", signal_all.c_str(), 1);
   // Compare_two_plots("demc.pdg", signal_all.c_str(), 1);
   // Compare_two_plots("crvinfomc._z[0]", signal_all.c_str(), 1);
@@ -132,10 +136,10 @@ void compare_CRY_DBY(){
     // Compare_two_graphs("crvinfomc._y[0]:crvinfomc._z[0]", "yz", cuts[n].c_str(), signal_all.c_str(), n);
 
     // Compare_two_plots("evtinfo.subrunid+100000*evtinfo.eventid",cuts[n].c_str(), n);
-    Compare_two_plots("de.mom",cuts[n].c_str(), n);
+    // Compare_two_plots("de.mom",cuts[n].c_str(), n);
     // Compare_two_plots("demc.pmom", cuts[n].c_str(), n);
-    Compare_two_plots("de.td", cuts[n].c_str(), n);
-    Compare_two_plots("de.d0", cuts[n].c_str(), n);
+    // Compare_two_plots("de.td", cuts[n].c_str(), n);
+    // Compare_two_plots("de.d0", cuts[n].c_str(), n);
     // Compare_two_plots("de.t0", cuts[n].c_str(), n);
     // Compare_two_plots("demcent.d0", cuts[n].c_str(), n);
     // Compare_two_plots("demcent.om", cuts[n].c_str(), n);
@@ -149,18 +153,20 @@ void compare_CRY_DBY(){
     // Compare_two_plots("de.t0err", cuts[n].c_str(), n);
     // Compare_two_plots("demc.pdg", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ppdg", cuts[n].c_str(), n);
-    Compare_two_plots("demc.prpdg", cuts[n].c_str(), n);
+    // Compare_two_plots("demc.prpdg", cuts[n].c_str(), n);
     // Compare_two_plots("demc.nambig", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ngood", cuts[n].c_str(), n);
     // Compare_two_plots("demc.nactive", cuts[n].c_str(), n);
     // Compare_two_plots("demc.nhits", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ndigigood", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ndigi", cuts[n].c_str(), n);    
-    Compare_two_plots("crvinfomc._x[0]", cuts[n].c_str(), n);
-    Compare_two_plots("crvinfomc._y[0]", cuts[n].c_str(), n);
+    // Compare_two_plots("crvinfomc._x[0]", cuts[n].c_str(), n);
+    // Compare_two_plots("crvinfomc._y[0]", cuts[n].c_str(), n);
     Compare_two_plots("crvinfomc._z[0]", cuts[n].c_str(), n);
 
-    //std::cin >> buff;
+    string buffer = "";
+    cout << "Enter any character to make the next plot" <<endl;
+    cin >> buffer;;
   }
 
   // TCanvas *c1 = new TCanvas("c1","c1",1800,600);
@@ -184,3 +190,30 @@ void compare_CRY_DBY(){
   // c1->SaveAs("plots/XZ_cry.png");
 }
 
+/*
+//Return an appropriate x-axis title for a plot based on which variable it is
+string getXaxisTitle(string variable)
+{
+  string xTitle;
+
+  switch(variable){
+    case "de.mom" : xTitle = "MeV/c"; break;
+    case "demc.pmom" : xTitle = "MeV/c"; break; 
+    case "de.td" : xTitle = ""; break; //Check meaning
+    case "de.d0" : xTitle = "mm"; break; 
+    case "de.t0" : xTitle = "" ; break;//
+    case "demcent.d0" : xTitle = "mm"; break;
+    case "demcent.om" : xTitle = ""; break;//
+    case "dec.eclust" : xTitle = ""; break;
+    case "de.trkqual" : xTitle = "Track Quality"; break;
+    case "demc.pdg" : xTitle = "MC PDG ID"; break;
+    case "demc.ppdg" : xTitle "MC PDG ID"; break;
+    case "crvinfomc._z[0]" : xTitle = "MC z[0] (mm)"; break;
+    case "crvinfomc._y[0]" : xTitle = "MC y[0] (mm)"; break;
+    case "crvinfomc._x[0]" : xTitle - "MC y[0] (mm)"; break;
+    default : xTitle = ""; 
+    }
+     
+  return xTitle;
+}
+*/

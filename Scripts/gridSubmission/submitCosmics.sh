@@ -6,12 +6,12 @@ setup mu2etools
 setup gridexport
 setup dhtools
 
-DSCONF=digi
+DSCONF=rerun
 MAINDIR=`pwd`
 WFPROJ=CRY_MT2
 TAG=`date +"%y%m%d%H%M%S"`
 OUTDIR=${DSCONF}_${TAG}
-OUTPNFS=/pnfs/mu2e/scratch/users/oksuzian/workflow/${OUTDIR}/
+OUTPNFS=/pnfs/mu2e/scratch/users/bbarton/workflow/${OUTDIR}/
 SF=pnfs_fcl/${OUTDIR}/fcllist.00
 BN=`basename $SF | cut -d. -f 1`
 JN="${BN}_${TAG}"
@@ -19,7 +19,11 @@ LN=logs/submit_${JN}.log
 SETUPFN=./Offline/setup.sh
 INLIST=/mu2e/app/users/oksuzian/Offline_v7_2_0_CRYMT/cry_filelist.txt
 MERGE=10
-CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.CYPjF7hIm0/Code.tar.bz
+CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.L4JnHSFC55/Code.tar.bz
+
+REPROCDIR=19374430.fcllist_190604094535
+INPATH=/pnfs/mu2e/scratch/users/bbarton/workflow/CRY_MT2/outstage/${REPROCDIR}/00/
+
 
 mkdir $OUTPNFS
 mkdir pnfs_fcl/$OUTDIR
@@ -59,13 +63,23 @@ elif [ "$DSCONF" == "digi" ]; then
     INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry1_concat.txt
     MERGE=10
 elif [ "$DSCONF" == "reco" ]; then
-    INFCL=Offline/JobConfig/reco/RecoMCDigisTrig_CRY.fcl
+    INFCL=Offline/JobConfig/reco/mcdigis_primary.fcl
 #    INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/cry_filelist_trkana_cry1_miss2.txt
     INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry2_digi.txt
     MERGE=5
 
 elif [ "$DSCONF" == "rerun" ]; then
-    SF=pnfs_fcl/digi_190202095834/fcllist.01
+    #Locate directories of failed jobs
+    findResults=( $(find ${INPATH} -mindepth 1 -maxdepth 1 -type d '!' -exec sh -c 'ls -1 "{}"|egrep -i -q "*.art"' ';' -print) )
+
+    #For each directory of a failed job, search the log file for the fcl file that needs to be reprocessed and write it to a fcllist file
+    for res in ${findResults[@]}
+    do
+	grep 'origFCL=' ${res}/log.* | cut -c9-110 >> /mu2e/app/users/bbarton/recovery_${REPROCDIR}.fcllist
+    done
+
+    SF=/mu2e/app/users/bbarton/recovery_${REPROCDIR}.fcllist
+
     submit_job
     exit 0
 else

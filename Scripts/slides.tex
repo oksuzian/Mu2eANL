@@ -1,0 +1,54 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass{beamer} %
+\usetheme{CambridgeUS}
+\usepackage[latin1]{inputenc}
+\usefonttheme{professionalfonts}
+\usepackage{times}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{verbatim}
+\usetikzlibrary{arrows,shapes}
+\author{Yuri Oksuzian}
+\title{CRY-Daya Bay comparison}
+\beamertemplatenavigationsymbolsempty
+
+
+\begin{document}
+
+\foreach \i in {0, 1, 2}{
+  \foreach \gamma in{xz, yz} {
+
+    \begin{frame}{CRY-blue, Daya Bay-red : \gamma}
+      \begin{columns}
+        
+        \column{1.0\textwidth}
+        \includegraphics[width=12.0cm]{plots/var\gamma_\i.png} 
+      \end{columns}
+    \end{frame}
+  }
+}
+
+
+\foreach \i in {0, 1, 2}{
+  \foreach \gamma in{de.mom, demc.pmom, de.td, de.d0, de.t0, demcent.d0, demcent.om, dec.eclust, dec.uvchisq, dec.dtllr, dec.epllr, de.trkqual, de.p0err, de.con, de.t0err, crvinfomc.x0, crvinfomc.y0, crvinfomc.z0, demc.pdg, demc.ppdg, demc.prpdg, demc.nambig, demc.ngood, demc.nactive, demc.nhits, demc.ndigigood, demc.ndigi} {
+
+    \begin{frame}{CRY-blue, Daya Bay-red : \gamma}
+      \begin{columns}
+        
+        \column{1.0\textwidth}
+        \includegraphics[width=12.0cm]{plots/var\gamma_\i.pdf} 
+      \end{columns}
+      
+      \begin{columns}
+        \column{1.0\textwidth}
+        \includegraphics[width=12.0cm]{plots/var\gamma_\i_log.pdf} 
+      \end{columns}
+    \end{frame}
+  }
+}
+
+
+  
+
+
+\end{document}
