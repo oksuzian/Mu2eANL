@@ -88,10 +88,8 @@ void Compare_two_graphs(const char* variable, const char* name, const char* cut1
 
   c1->SaveAs(Form("plots/var%s_%d.png", name, cut_version));
   c1->SaveAs(Form("plots/var%s_%d.pdf", name, cut_version));
-
-
-
 }
+
 
 void compare_CRY_DBY(){
   TFile file1("/mu2e/data/users/oksuzian/nts.oksuzian.trkanadigi.trkana_prov743_test1.root");
@@ -190,30 +188,42 @@ void compare_CRY_DBY(){
   // c1->SaveAs("plots/XZ_cry.png");
 }
 
-/*
-//Return an appropriate x-axis title for a plot based on which variable it is
-string getXaxisTitle(string variable)
+//Function to make a single plot
+void plotHist(string path, string variable, bool neg)
 {
-  string xTitle;
+   TCanvas *canv = new TCanvas("canv",variable.c_str(),800,600);
+  //Extract a tree and histogram from the provided filename/path
+  TFile inFile(path.c_str());
+  TTree *tree;
+  if (neg) 
+    tree = (TTree*) inFile.Get("TrkAnaNeg/trkana");
+  else
+    tree = (TTree*) inFile.Get("TrkAnaPos/trkana");
 
-  switch(variable){
-    case "de.mom" : xTitle = "MeV/c"; break;
-    case "demc.pmom" : xTitle = "MeV/c"; break; 
-    case "de.td" : xTitle = ""; break; //Check meaning
-    case "de.d0" : xTitle = "mm"; break; 
-    case "de.t0" : xTitle = "" ; break;//
-    case "demcent.d0" : xTitle = "mm"; break;
-    case "demcent.om" : xTitle = ""; break;//
-    case "dec.eclust" : xTitle = ""; break;
-    case "de.trkqual" : xTitle = "Track Quality"; break;
-    case "demc.pdg" : xTitle = "MC PDG ID"; break;
-    case "demc.ppdg" : xTitle "MC PDG ID"; break;
-    case "crvinfomc._z[0]" : xTitle = "MC z[0] (mm)"; break;
-    case "crvinfomc._y[0]" : xTitle = "MC y[0] (mm)"; break;
-    case "crvinfomc._x[0]" : xTitle - "MC y[0] (mm)"; break;
-    default : xTitle = ""; 
-    }
-     
-  return xTitle;
+  tree->Draw(Form("%s>>hist", variable.c_str()),"", "goff");
+  TH1F *hist = (TH1F*)gDirectory->Get("hist");
+ 
+
+  //Make plot look pretty
+  gStyle->SetOptStat(1110);
+  hist->SetTitle(variable.c_str());
+  string xTitle = "";
+  cout << "Enter a title for the x-axis for variable = " << variable << endl;
+  cin >> xTitle;
+  hist->SetXTitle(xTitle.c_str());
+  hist->SetLineColor(kBlue);
+
+
+  //Plot hist
+ 
+  canv->cd(1);
+  hist->Draw("hist");
+
+  canv->SaveAs(Form("plots/%s.pdf", variable.c_str()));
+  
+
+
+  string buffer = "";
+  cout << "Enter any character to close" << endl;
+  cin >> buffer;
 }
-*/
