@@ -223,9 +223,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   if (makeCuts)
     {
       if (mixed)
-	cuts = TCut(all_cuts_MDC_mixed.c_str());
+	cuts = TCut(all_cuts_MDC_pid_mixed.c_str());
       else
-	cuts = TCut(all_cuts_MDC.c_str());
+	cuts = TCut(all_cuts_MDC_pid.c_str());
 
       cutIdentifier = "_cut";
     }
