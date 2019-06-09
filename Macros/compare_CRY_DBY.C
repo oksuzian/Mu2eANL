@@ -12,8 +12,8 @@ void Compare_two_plots(std::string variable, const char* cut, int cut_version=0)
 
   TCanvas *c1 = new TCanvas("c1","c1",1800,600);
 
-  tree_cry->Draw(Form("%s>>hCRY", variable.c_str()),"", "goff");
-  tree_dby->Draw(Form("%s>>hDBY", variable.c_str()),"", "goff");
+  tree_cry->Draw(Form("%s>>hCRY", variable.c_str()),cut, "goff");
+  tree_dby->Draw(Form("%s>>hDBY", variable.c_str()),cut, "goff");
   TH1F *hCRY = (TH1F*)gDirectory->Get("hCRY");
   TH1F *hDBY = (TH1F*)gDirectory->Get("hDBY");
 
@@ -153,14 +153,14 @@ void compare_CRY_DBY(){
     // Compare_two_plots("demc.ppdg", cuts[n].c_str(), n);
     // Compare_two_plots("demc.prpdg", cuts[n].c_str(), n);
     // Compare_two_plots("demc.nambig", cuts[n].c_str(), n);
-    // Compare_two_plots("demc.ngood", cuts[n].c_str(), n);
+    Compare_two_plots("demc.ngood", cuts[n].c_str(), n);
     // Compare_two_plots("demc.nactive", cuts[n].c_str(), n);
-    // Compare_two_plots("demc.nhits", cuts[n].c_str(), n);
+    Compare_two_plots("demc.nhits", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ndigigood", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ndigi", cuts[n].c_str(), n);    
     // Compare_two_plots("crvinfomc._x[0]", cuts[n].c_str(), n);
     // Compare_two_plots("crvinfomc._y[0]", cuts[n].c_str(), n);
-    Compare_two_plots("crvinfomc._z[0]", cuts[n].c_str(), n);
+    // Compare_two_plots("crvinfomc._z[0]", cuts[n].c_str(), n);
 
     string buffer = "";
     cout << "Enter any character to make the next plot" <<endl;
@@ -191,6 +191,27 @@ void compare_CRY_DBY(){
 //Function to make a single plot
 void plotHist(string path, string variable, bool neg)
 {
+
+  // Cuts
+  std::string momentum_cut = "de.mom>100 && de.mom<110 && ue.nhits<0";
+  // std::string momentum_cut = "de.mom>80 && de.mom<120 && ue.nhits<0";
+  std::string trk_cuts_CD3 = "de.nactive>=25 && de.con>2e-3 && de.p0err<0.25 && de.t0err<0.9";
+  std::string trk_cuts_MDC = "de.trkqual>0.4";
+  std::string pitch_angle  = "de.td>0.57735027 && de.td<1"; //  Excludes beam particles
+  //  std::string pitch_angle  = "de.td>0.57735027 && de.td<1.5"; //  Excludes beam particles
+  std::string min_trans_R  = "de.d0>-80 && de.d0<105"; //  Consistent with coming from the target
+  std::string max_trans_R  = "(demcent.d0+2.0/demcent.om)>450. && (demcent.d0+2.0/demcent.om)<680."; //  Inconsistent with hitting the proton absorber
+  std::string signal_pid   = "dec.eclust>10.0 && dec.eclust<120 && dec.uvchisq<100.0 && (max(dec.dtllr,0.0)+max(dec.epllr,0.0))>1.5";
+  std::string timing_cut   = "de.t0>700 && de.t0<1600";
+  std::string all_cuts_CD3=momentum_cut+"&&"+trk_cuts_CD3+"&&"+pitch_angle+"&&"+min_trans_R+"&&"+max_trans_R+"&&"+signal_pid+"&&"+timing_cut;
+  // std::string all_cuts_MDC=momentum_cut+"&&"+trk_cuts_MDC+"&&"+pitch_angle+"&&"+min_trans_R+"&&"+max_trans_R+"&&"+signal_pid+"&&"+timing_cut;
+  std::string all_cuts_MDC=momentum_cut+"&&"+trk_cuts_MDC+"&&"+pitch_angle+"&&"+min_trans_R+"&&"+max_trans_R;
+
+  // std::string signal_all = all_cuts_MDC+"&& crvinfomc._z[0]>13000";
+  std::string signal_all = all_cuts_MDC;
+
+
+
    TCanvas *canv = new TCanvas("canv",variable.c_str(),800,600);
   //Extract a tree and histogram from the provided filename/path
   TFile inFile(path.c_str());
@@ -200,7 +221,7 @@ void plotHist(string path, string variable, bool neg)
   else
     tree = (TTree*) inFile.Get("TrkAnaPos/trkana");
 
-  tree->Draw(Form("%s>>hist", variable.c_str()),"", "goff");
+  tree->Draw(Form("%s>>hist", variable.c_str()),signal_all.c_str(), "goff");
   TH1F *hist = (TH1F*)gDirectory->Get("hist");
  
 
@@ -215,15 +236,14 @@ void plotHist(string path, string variable, bool neg)
 
 
   //Plot hist
- 
   canv->cd(1);
   hist->Draw("hist");
-
   canv->SaveAs(Form("plots/%s.pdf", variable.c_str()));
   
+  //Calculations
+  cout << "Integral = " << hist->Integral(hist->FindBin(5),hist->FindBin(200)) << endl;
 
-
-  string buffer = "";
-  cout << "Enter any character to close" << endl;
-  cin >> buffer;
+  // string buffer = "";
+  // cout << "Enter any character to close" << endl;
+  // cin >> buffer;
 }
