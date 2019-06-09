@@ -24,8 +24,8 @@
 ////////////////////////////////////////////////////    Define Standard Cuts    //////////////////////////////////////////////////////////////////////////
 
 string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
-string trk_cuts_MDC = "dequal.TrkQualDeM>0.4";
-string trk_cut_pid = "dequal.TrkPIDDeM>0.8";
+string trk_cuts_MDC = "dequal.TrkQualDeM>0.8"; //For original CRY1 analysis this was 0.4
+string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
 string pitch_angle  = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
 string min_trans_R  = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
 string max_trans_R  = "(demcent.d0+2.0/demcent.om)>450. && (demcent.d0+2.0/demcent.om)<680."; //  Inconsistent with hitting the proton absorber
