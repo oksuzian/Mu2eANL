@@ -19,7 +19,7 @@ LN=logs/submit_${JN}.log
 SETUPFN=./Offline/setup.sh
 INLIST=/mu2e/app/users/oksuzian/Offline_v7_2_0_CRYMT/cry_filelist.txt
 MERGE=10
-CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.L4JnHSFC55/Code.tar.bz
+CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.OiWE4lHVkR/Code.tar.bz
 
 REPROCDIR=19374430.fcllist_190604094535
 INPATH=/pnfs/mu2e/scratch/users/bbarton/workflow/CRY_MT2/outstage/${REPROCDIR}/00/
@@ -58,15 +58,16 @@ if [ "$DSCONF" == "CRY" ]; then
 elif [ "$DSCONF" == "DYB" ]; then
     INFCL=Offline/JobConfig/cosmic/cosmic_s1_general_dbay.fcl
 elif [ "$DSCONF" == "digi" ]; then
-    INFCL=Offline/JobConfig/cosmic/cosmic_s3_general_cry.fcl
-#    INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry2_uniq.txt
+    #INFCL=Offline/JobConfig/cosmic/cosmic_s3_general_cry.fcl
+    INFCL=Offline/JobConfig/primary/CRY-offspill.fcl
+#   INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry2_uniq.txt
     INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry1_concat.txt
     MERGE=10
 elif [ "$DSCONF" == "reco" ]; then
-    #INFCL=Offline/JobConfig/reco/mcdigis_primary.fcl  #####This is useful for a purely cosmic CRY sample
-    INFCL=Offline/JobConfig/reco/mcdigis_CRY.fcl  ##This is useful for a mixed cry sample
+    INFCL=Offline/JobConfig/reco/mcdigis_primary.fcl  #####This is useful for a purely cosmic CRY sample
+    #INFCL=Offline/JobConfig/reco/mcdigis_CRY.fcl  ##This is useful for a mixed cry sample
 #    INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/cry_filelist_trkana_cry1_miss2.txt
-    INLIST=/mu2e/app/users/bbarton/dig.mu2e.CRY-cosmic-general-mix.MDC2018g_testBatch.txt
+    INLIST=/mu2e/app/users/bbarton/submissionLists/cry1_RecoList.txt
     MERGE=5
 
 elif [ "$DSCONF" == "rerun" ]; then
