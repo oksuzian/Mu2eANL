@@ -24,8 +24,8 @@
 ////////////////////////////////////////////////////    Define Standard Cuts    //////////////////////////////////////////////////////////////////////////
 
 string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
-string trk_cuts_MDC = "dequal.TrkQualDeM>0.4";
-string trk_cut_pid = "dequal.TrkPIDDeM>0.8";
+string trk_cuts_MDC = "dequal.TrkQualDeM>0.8"; //For original CRY1 analysis this was 0.4
+string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
 string pitch_angle  = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
 string min_trans_R  = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
 string max_trans_R  = "(demcent.d0+2.0/demcent.om)>450. && (demcent.d0+2.0/demcent.om)<680."; //  Inconsistent with hitting the proton absorber
@@ -50,7 +50,6 @@ TH1F *h_crvinfomc_primaryX;
 TH1F *h_crvinfomc_primaryY;
 TH1F *h_crvinfomc_primaryZ;
 TH2F *h_crvinfomc_primaryZ_vs_X;
-TH2F *h_crvinfomc_primaryZ_vs_Y; 
 TH1F *h_crvinfomc_primaryPdgId;
 TH1F *h_crvinfomc_primaryE;
 TH1F *h_deent_mom;
@@ -68,17 +67,21 @@ void initializeHists(bool makeCuts)
   //crvinfomc._x[0] - x position at the CRV
   h_crvinfomc_x0 = new TH1F("h_crvinfomc_x0", "crvinfomc._x[0]", 100, -7200, -1000); 
   h_crvinfomc_x0->SetXTitle("x at CRV (mm)");
+
   //crvinfomc._y[0] - y position at the CRV
   h_crvinfomc_y0 = new TH1F("h_crvinfomc_y0", "crvinfomc._y[0]", 100, -2000, 3200);
   h_crvinfomc_y0->SetXTitle("y at CRV (mm)");
+
   //crvinfomc._z[0] - z position at the CRV
   h_crvinfomc_z0 = new TH1F("h_crvinfomc_z0", "crvinfomc._z[0]", 100, -3000, 19000);
   h_crvinfomc_z0->SetXTitle("z at CRV (mm)");
+
   //crvinfomc._z[0]:crvinfomc._x[0] - z vs x position at the CRV
   h_crvinfomc_z0_vs_x0 = new TH2F("h_crvinfomc_z0_vs_x0","crvinfomc._z[0] vs crvinfomc._x[0]", 100, -5000, 20000, 100, -7500, 1000);
   h_crvinfomc_z0_vs_x0->SetXTitle("x at the CRV (mm)");
   h_crvinfomc_z0_vs_x0->SetYTitle("z at the CRV (mm)");
   h_crvinfomc_z0_vs_x0->SetStats(false);
+
   //crvinfomc._z[0]:crvinfomc._y[0] - z vs y position at the CRV
   h_crvinfomc_z0_vs_y0 = new TH2F("h_crvinfomc_z0_vs_y0","crvinfomc._z[0] vs crvinfomc._y[0]", 100, -5000, 20000, 100, -2500, 3500);
   h_crvinfomc_z0_vs_y0->SetXTitle("y at the CRV (mm)");
@@ -92,34 +95,34 @@ void initializeHists(bool makeCuts)
   else
     h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -100000, 100000);
   h_crvinfomc_primaryX->SetXTitle("x (mm)");
+
   //crvinfomc._primaryY - y position of the primary particle
   if (makeCuts)
     h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15365, 15366);
   else
     h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15350, 15450);
   h_crvinfomc_primaryY->SetXTitle("y (mm)");
+
   //crvinfomc._primaryZ - z position of the primary particle
   if (makeCuts)
     h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -40000, 40000);
   else
     h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -100000, 100000);
   h_crvinfomc_primaryZ->SetXTitle("z (mm)");
+
   //cvinfomc._primaryZ:crvinfomc._primaryX - z vs x position of the primary
-  h_crvinfomc_primaryZ_vs_X = new TH2F("h_crvinfomc_primaryZ_vs_X", "crvinfomc._primaryZ vs crvinfomc._primaryX", 100, -300, 300, 100, -300, 400);
+  h_crvinfomc_primaryZ_vs_X = new TH2F("h_crvinfomc_primaryZ_vs_X", "crvinfomc._primaryZ vs crvinfomc._primaryX", 100, -60000, 60000, 100, -60000, 60000);
   h_crvinfomc_primaryZ_vs_X->SetXTitle("x (mm)");
   h_crvinfomc_primaryZ_vs_X->SetYTitle("z (mm)");
   h_crvinfomc_primaryZ_vs_X->SetStats(false);
-  //cvinfomc._primaryZ:crvinfomc._primaryX - z vs y position of the primary
-  h_crvinfomc_primaryZ_vs_Y = new TH2F("h_crvinfomc_primaryZ_vs_Y", "crvinfomc._primaryZ vs crvinfomc._primaryY", 100, -300, 300, 100, -2000, 16000);
-  h_crvinfomc_primaryZ_vs_Y->SetXTitle("y (mm)");
-  h_crvinfomc_primaryZ_vs_Y->SetYTitle("z (mm)");
-  h_crvinfomc_primaryZ_vs_Y->SetStats(false);
+
   //crvinfomc._primaryPgdId - Primary particle ID
   if (makeCuts)
     h_crvinfomc_primaryPdgId = new TH1F("h_crvinfomc_primaryPdgId", "crvinfomc._primaryPdgId", 100, -225, 25);
   else
     h_crvinfomc_primaryPdgId = new TH1F("h_crvinfomc_primaryPdgId", "crvinfomc._primaryPdgId", 100, -300, 2300);
   h_crvinfomc_primaryPdgId->SetXTitle("Primary Particle Pdg ID");
+
   //crvinfomc._primaryE - Energy of primary
   h_crvinfomc_primaryE = new TH1F("h_crvinfomc_primaryE", "h_crvinfomc._primaryE", 100, 0, 150000);
   h_crvinfomc_primaryE->SetXTitle("Energy (MeV)");
@@ -131,21 +134,26 @@ void initializeHists(bool makeCuts)
   else
     h_deent_mom = new TH1F("h_deent_mom", "deent.mom", 100, 0, 300);
   h_deent_mom->SetXTitle("Momentum (MeV/c)");
+
   //de.do - Distance of downstream electron from the center of the detector
   h_deent_d0 = new TH1F("h_deent_d0", "deent.d0", 100, -500, 500);
   h_deent_d0->SetXTitle("Distance to Center (mm)");
+
   //de.td - Pitch angle of downstream electron
   h_deent_td = new TH1F("h_deent_td", "deent.td", 100, 0, 5);
   h_deent_td->SetXTitle("Pitch Angle");
+
   //de.t0 - t_0 of downstream electron track
   h_de_t0 = new TH1F("h_de_t0", "de.t0", 100, 700, 1000);
   h_de_t0->SetXTitle("Time (ns)");
+
   //de.trkqual - Track quality score of downstream electron track
   if (makeCuts)
     h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "dequal.TrkQualDeM", 100, 0.4, 1);
   else
     h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "dequal.TrkQualDeM", 100, 0, 1);
   h_dequal_trkQualDeM->SetXTitle("Track Quality Rating");
+
   //demcent.d0 - MC truth downstream electron distance at tracker entrance
   if (makeCuts)
     h_demcent_d0 = new TH1F("h_demcent_d0", "demcent._d0", 100, -150, 150);
@@ -159,6 +167,7 @@ void initializeHists(bool makeCuts)
   h_det0_vs_CRVtimeWindowStart->SetXTitle("t_0 at CRV (ns)");
   h_det0_vs_CRVtimeWindowStart->SetYTitle("t_0 at Tracker (ns)");
   h_det0_vs_CRVtimeWindowStart->SetStats(false);
+
   //de.t0:crvinfomc._time - MC Truth time at tracker vs CRV
   h_det0_vs_crvinfomc_time = new TH2F("h_det0_vs_crvinfomc_time","de.t0:crvinfomc._time", 100, -40, 250, 100, 700, 1050);
   h_det0_vs_crvinfomc_time->SetXTitle("MC Truth t_0 at CRV (ns)");
@@ -182,7 +191,6 @@ void deleteHists()
   h_crvinfomc_primaryY->Delete();
   h_crvinfomc_primaryZ->Delete();
   h_crvinfomc_primaryZ_vs_X->Delete();
-  h_crvinfomc_primaryZ_vs_Y->Delete();
   h_crvinfomc_primaryPdgId->Delete();
   h_crvinfomc_primaryE->Delete();
   h_deent_mom->Delete();
@@ -290,6 +298,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   tree->Draw("crvinfomc._primaryX>>+h_crvinfomc_primaryX",cuts, "goff");
   h_crvinfomc_primaryX = (TH1F*) gDirectory->Get("h_crvinfomc_primaryX");
   canv->cd();
+  h_crvinfomc_primaryX->SetTitle("crvinfomc._primaryX");
+  h_crvinfomc_primaryX->SetXTitle("x (mm)");
+  h_crvinfomc_primaryX->SetBins(100, -100000, 100000); 
   h_crvinfomc_primaryX->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryX" + cutIdentifier + ".pdf").c_str());
   logCanv->cd();
@@ -299,6 +310,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   //crvinfomc._primaryY
   tree->Draw("crvinfomc._primaryY>>+h_crvinfomc_primaryY",cuts, "goff");
   h_crvinfomc_primaryY = (TH1F*) gDirectory->Get("h_crvinfomc_primaryY");
+  h_crvinfomc_primaryY->SetTitle("crvinfomc._primaryY");
+  h_crvinfomc_primaryY->SetXTitle("y (mm)");
+  h_crvinfomc_primaryY->SetBins(10, 15360, 15370); 
   canv->cd();
   h_crvinfomc_primaryY->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryY" + cutIdentifier + ".pdf").c_str());
@@ -309,6 +323,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   //crvinfomc._primaryZ
   tree->Draw("crvinfomc._primaryZ>>+h_crvinfomc_primaryZ",cuts, "goff");
   h_crvinfomc_primaryZ = (TH1F*) gDirectory->Get("h_crvinfomc_primaryZ");
+  h_crvinfomc_primaryZ->SetTitle("crvinfomc._primaryZ");
+  h_crvinfomc_primaryZ->SetXTitle("z (mm)");
+  h_crvinfomc_primaryZ->SetBins(100, -20000, 40000); 
   canv->cd();
   h_crvinfomc_primaryZ->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ" + cutIdentifier + ".pdf").c_str());
@@ -317,18 +334,11 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   logCanv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_logY" + cutIdentifier + ".pdf").c_str());
 
   //cvinfomc._primaryZ:crvinfomc._primaryX
-  tree->Draw("crvinfomc._primaryX:crvinfomc._primaryZ",cuts, "goff");
-  // h_crvinfomc_primaryZ_vs_X = (TH2F*) gDirectory->Get("h_crvinfomc_primaryZ_vs_X");
+  tree->Draw("crvinfomc._primaryX:crvinfomc._primaryZ>>+h_crvinfomc_primaryZ_vs_X",cuts, "goff");
   canv->cd();
   h_crvinfomc_primaryZ_vs_X->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X" + cutIdentifier + ".pdf").c_str());
 
-  //cvinfomc._primaryZ:crvinfomc._primaryY
-  tree->Draw("crvinfomc._primaryY:crvinfomc._primaryZ",cuts, "goff");
-  //  h_crvinfomc_primaryZ_vs_Y = (TH2F*) gDirectory->Get("h_crvinfomc_primaryZ_vs_Y");
-  canv->cd();
-  h_crvinfomc_primaryZ_vs_Y->Draw();
-  canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_Y" + cutIdentifier + ".pdf").c_str());
 
   //crvinfomc._primaryPdgId
   tree->Draw("crvinfomc._primaryPdgId>>+h_crvinfomc_primaryPdgId",cuts, "goff");
