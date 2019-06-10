@@ -1,6 +1,7 @@
 //Standardized plotting of CRY samples from TrkAna Trees
 //Ben Barton
-//06/09/2019
+//06/09/2019 - Initial version complete
+//06/09/2019 - Added plots, fixed bugs, fine tuned parameters
 
 
 /********************************************************************************************************************************************************/
@@ -37,10 +38,8 @@ string all_cuts_MDC_pid_mixed = all_cuts_MDC_pid + "&&" + timing_cut;
 
 
 /********************************************************************************************************************************************************/
-///////////////////////////////////////////////////    Define Standard Histograms   //////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////    Define Standard Histograms & Graphs    ////////////////////////////////////////////////////////////
 
-//Position at CRV
-//crvinfomc._x[0] - x position at the CRV
 TH1F *h_crvinfomc_x0;
 TH1F *h_crvinfomc_y0;
 TH1F *h_crvinfomc_z0;
@@ -60,125 +59,162 @@ TH1F *h_dequal_trkQualDeM;
 TH1F *h_demcent_d0;
 TH2F *h_det0_vs_CRVtimeWindowStart;
 TH2F *h_det0_vs_crvinfomc_time;
+TH1F *h_delta_det0_CRVtimeWindowStart;
+TH1F *h_delta_det0_crvinfomc_time;
+TH1F *h_cos_theta;
+TH1F *h_noCRV_demc_pdg;
+
+TGraph *g_crvinfomc_z0_vs_x0; 
+TGraph *g_crvinfomc_z0_vs_y0;
+TGraph *g_crvinfomc_primaryZ_vs_X;
+TGraph *g_det0_vs_CRVtimeWindowStart;
+TGraph *g_det0_vs_crvinfomc_time;
+
 
 void initializeHists(bool makeCuts)
 {
   //Position at CRV
   //crvinfomc._x[0] - x position at the CRV
-  h_crvinfomc_x0 = new TH1F("h_crvinfomc_x0", "crvinfomc._x[0]", 100, -7200, -1000); 
-  h_crvinfomc_x0->SetXTitle("x at CRV (mm)");
+  h_crvinfomc_x0 = new TH1F("h_crvinfomc_x0", "crvinfomc._x[0]", 100, -7.2, 0); 
+  h_crvinfomc_x0->SetXTitle("x at CRV (m)");
 
   //crvinfomc._y[0] - y position at the CRV
-  h_crvinfomc_y0 = new TH1F("h_crvinfomc_y0", "crvinfomc._y[0]", 100, -2000, 3200);
-  h_crvinfomc_y0->SetXTitle("y at CRV (mm)");
+  h_crvinfomc_y0 = new TH1F("h_crvinfomc_y0", "crvinfomc._y[0]", 100, -2, 3.2);
+  h_crvinfomc_y0->SetXTitle("y at CRV (m)");
 
   //crvinfomc._z[0] - z position at the CRV
-  h_crvinfomc_z0 = new TH1F("h_crvinfomc_z0", "crvinfomc._z[0]", 100, -3000, 19000);
-  h_crvinfomc_z0->SetXTitle("z at CRV (mm)");
+  h_crvinfomc_z0 = new TH1F("h_crvinfomc_z0", "crvinfomc._z[0]", 100, -3, 19);
+  h_crvinfomc_z0->SetXTitle("z at CRV (m)");
 
   //crvinfomc._z[0]:crvinfomc._x[0] - z vs x position at the CRV
-  h_crvinfomc_z0_vs_x0 = new TH2F("h_crvinfomc_z0_vs_x0","crvinfomc._z[0] vs crvinfomc._x[0]", 100, -5000, 20000, 100, -7500, 1000);
-  h_crvinfomc_z0_vs_x0->SetXTitle("x at the CRV (mm)");
-  h_crvinfomc_z0_vs_x0->SetYTitle("z at the CRV (mm)");
+  h_crvinfomc_z0_vs_x0 = new TH2F("h_crvinfomc_z0_vs_x0","crvinfomc._z[0] vs crvinfomc._x[0]", 100, -5, 20, 100, -7.5, 1);
+  h_crvinfomc_z0_vs_x0->SetXTitle("z at the CRV (m)");
+  h_crvinfomc_z0_vs_x0->SetYTitle("x at the CRV (m)");
   h_crvinfomc_z0_vs_x0->SetStats(false);
 
   //crvinfomc._z[0]:crvinfomc._y[0] - z vs y position at the CRV
-  h_crvinfomc_z0_vs_y0 = new TH2F("h_crvinfomc_z0_vs_y0","crvinfomc._z[0] vs crvinfomc._y[0]", 100, -5000, 20000, 100, -2500, 3500);
-  h_crvinfomc_z0_vs_y0->SetXTitle("y at the CRV (mm)");
-  h_crvinfomc_z0_vs_y0->SetYTitle("z at the CRV (mm)");
+  h_crvinfomc_z0_vs_y0 = new TH2F("h_crvinfomc_z0_vs_y0","crvinfomc._z[0] vs crvinfomc._y[0]", 100, -5, 20, 100, -2., 3.5);
+  h_crvinfomc_z0_vs_y0->SetXTitle("z at the CRV (m)");
+  h_crvinfomc_z0_vs_y0->SetYTitle("y at the CRV (m)");
   h_crvinfomc_z0_vs_y0->SetStats(false);
 
   //Primary Particle
   //crvinfomc._primaryX - x position of the primary particle
   if (makeCuts)
-    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -50000, 50000);
+    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -50, 50);
   else
-    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -100000, 100000);
-  h_crvinfomc_primaryX->SetXTitle("x (mm)");
+    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -60, 0);
+  h_crvinfomc_primaryX->SetXTitle("x (m)");
 
   //crvinfomc._primaryY - y position of the primary particle
   if (makeCuts)
-    h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15365, 15366);
+    h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15.365, 15.366);
   else
-    h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15350, 15450);
-  h_crvinfomc_primaryY->SetXTitle("y (mm)");
+    h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15.350, 15.450);
+  h_crvinfomc_primaryY->SetXTitle("y (m)");
 
   //crvinfomc._primaryZ - z position of the primary particle
   if (makeCuts)
-    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -40000, 40000);
+    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -40, 40);
   else
-    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -100000, 100000);
-  h_crvinfomc_primaryZ->SetXTitle("z (mm)");
+    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -100, 100);
+  h_crvinfomc_primaryZ->SetXTitle("z (m)");
 
   //cvinfomc._primaryZ:crvinfomc._primaryX - z vs x position of the primary
-  h_crvinfomc_primaryZ_vs_X = new TH2F("h_crvinfomc_primaryZ_vs_X", "crvinfomc._primaryZ vs crvinfomc._primaryX", 100, -60000, 60000, 100, -60000, 60000);
-  h_crvinfomc_primaryZ_vs_X->SetXTitle("x (mm)");
-  h_crvinfomc_primaryZ_vs_X->SetYTitle("z (mm)");
+  h_crvinfomc_primaryZ_vs_X = new TH2F("h_crvinfomc_primaryZ_vs_X", "crvinfomc._primaryZ vs crvinfomc._primaryX", 100, -60, 60, 100, -60, 60);
+  h_crvinfomc_primaryZ_vs_X->SetXTitle("x (m)");
+  h_crvinfomc_primaryZ_vs_X->SetYTitle("z (m)");
   h_crvinfomc_primaryZ_vs_X->SetStats(false);
 
   //crvinfomc._primaryPgdId - Primary particle ID
-  if (makeCuts)
-    h_crvinfomc_primaryPdgId = new TH1F("h_crvinfomc_primaryPdgId", "crvinfomc._primaryPdgId", 100, -225, 25);
-  else
-    h_crvinfomc_primaryPdgId = new TH1F("h_crvinfomc_primaryPdgId", "crvinfomc._primaryPdgId", 100, -300, 2300);
-  h_crvinfomc_primaryPdgId->SetXTitle("Primary Particle Pdg ID");
+  //if (makeCuts)
+  // h_crvinfomc_primaryPdgId = new TH1F("h_crvinfomc_primaryPdgId", "crvinfomc._primaryPdgId", 100, -225, 25);
+  //else
+  h_crvinfomc_primaryPdgId = new TH1F("h_crvinfomc_primaryPdgId", "crvinfomc._primaryPdgId", 100, -225, 2300);
+  h_crvinfomc_primaryPdgId->SetXTitle("Primary Particle PDG ID");
 
   //crvinfomc._primaryE - Energy of primary
-  h_crvinfomc_primaryE = new TH1F("h_crvinfomc_primaryE", "h_crvinfomc._primaryE", 100, 0, 150000);
-  h_crvinfomc_primaryE->SetXTitle("Energy (MeV)");
+  h_crvinfomc_primaryE = new TH1F("h_crvinfomc_primaryE", "h_crvinfomc._primaryE", 100, 0, 200000);
+  h_crvinfomc_primaryE->SetXTitle("Primary Particle Energy (MeV)");
 
   //Downstream Electron
-  //de.mom - Momentum of downstream electron
+  //deent.mom - Momentum of downstream electron
   if (makeCuts)
-    h_deent_mom = new TH1F("h_deent_mom", "deent.mom", 100, 100, 110);
+    h_deent_mom = new TH1F("h_deent_mom", "deent.mom", 25, 100, 110);
   else
     h_deent_mom = new TH1F("h_deent_mom", "deent.mom", 100, 0, 300);
   h_deent_mom->SetXTitle("Momentum (MeV/c)");
 
-  //de.do - Distance of downstream electron from the center of the detector
-  h_deent_d0 = new TH1F("h_deent_d0", "deent.d0", 100, -500, 500);
+  //deent.do - Distance of downstream electron from the center of the detecto
+  if (makeCuts)
+    h_deent_d0 = new TH1F("h_deent_d0", "deent.d0", 100, -150, 150);
+  else
+    h_deent_d0 = new TH1F("h_deent_d0", "deent.d0", 100, -500, 500);
   h_deent_d0->SetXTitle("Distance to Center (mm)");
 
-  //de.td - Pitch angle of downstream electron
-  h_deent_td = new TH1F("h_deent_td", "deent.td", 100, 0, 5);
+  //deent.td - Pitch angle of downstream electron
+  if (makeCuts)
+    h_deent_td = new TH1F("h_deent_td", "deent.td", 100, 0.5, 1.5);
+  else
+    h_deent_td = new TH1F("h_deent_td", "deent.td", 100, 0, 5);
   h_deent_td->SetXTitle("Pitch Angle");
 
-  //de.t0 - t_0 of downstream electron track
-  h_de_t0 = new TH1F("h_de_t0", "de.t0", 100, 700, 1000);
+  //deent.t0 - t_0 of downstream electron track
+  if (makeCuts)
+     h_de_t0 = new TH1F("h_de_t0", "de.t0", 100, 500, 1700);
+  else
+    h_de_t0 = new TH1F("h_de_t0", "de.t0", 100, 400, 1700);
   h_de_t0->SetXTitle("Time (ns)");
 
-  //de.trkqual - Track quality score of downstream electron track
+  //dequal.trkQualDeM - Track quality score of downstream electron track
   if (makeCuts)
     h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "dequal.TrkQualDeM", 100, 0.4, 1);
   else
     h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "dequal.TrkQualDeM", 100, 0, 1);
-  h_dequal_trkQualDeM->SetXTitle("Track Quality Rating");
+  h_dequal_trkQualDeM->SetXTitle("Track Quality");
 
   //demcent.d0 - MC truth downstream electron distance at tracker entrance
   if (makeCuts)
     h_demcent_d0 = new TH1F("h_demcent_d0", "demcent._d0", 100, -150, 150);
   else
-    h_demcent_d0 = new TH1F("h_demcent_d0", "demcent._d0", 100, -500, 500);
+    h_demcent_d0 = new TH1F("h_demcent_d0", "demcent._d0", 100, -550, 500);
   h_demcent_d0->SetXTitle("Distance from center (mm)");
 
   //Timing Comparisons
   //de.t0:crvinfo._timeWindowStart - t0 of tracker vs t0 of CRV
-  h_det0_vs_CRVtimeWindowStart = new TH2F("h_det0_vs_CRVtimeWindowStart","de.t0:crvinfo._timeWindowStart", 100, 500, 1500, 100, 650, 1100);
+  h_det0_vs_CRVtimeWindowStart = new TH2F("h_det0_vs_CRVtimeWindowStart","de.t0:crvinfo._timeWindowStart", 100, 400, 1750, 100, 400, 1750);
   h_det0_vs_CRVtimeWindowStart->SetXTitle("t_0 at CRV (ns)");
   h_det0_vs_CRVtimeWindowStart->SetYTitle("t_0 at Tracker (ns)");
   h_det0_vs_CRVtimeWindowStart->SetStats(false);
 
   //de.t0:crvinfomc._time - MC Truth time at tracker vs CRV
-  h_det0_vs_crvinfomc_time = new TH2F("h_det0_vs_crvinfomc_time","de.t0:crvinfomc._time", 100, -40, 250, 100, 700, 1050);
+  h_det0_vs_crvinfomc_time = new TH2F("h_det0_vs_crvinfomc_time","de.t0:crvinfomc._time", 100, 400, 1750, 100, 400, 1750);
   h_det0_vs_crvinfomc_time->SetXTitle("MC Truth t_0 at CRV (ns)");
   h_det0_vs_crvinfomc_time->SetYTitle("t_0 at Tracker (ns)");
   h_det0_vs_crvinfomc_time->SetStats(false);
+
+  //de.t0 - crvinfo._timeWindowStart - Time delta of tracker to real CRV hits
+  h_delta_det0_CRVtimeWindowStart = new TH1F("h_delta_det0_CRVtimeWindowStart", "de.t0 - crvinfo._timeWindowStart", 100, -300 , 300);
+  h_delta_det0_CRVtimeWindowStart->SetXTitle("Time Delta (ns)");
+
+  //de.t0 - crvinfomc._time - Time delta of tracker to MC Truth CRV of CRV hits
+  h_delta_det0_crvinfomc_time = new TH1F("h_delta_det0_crvinfomc_time", "de.t0 - crvinfomc._time", 100, -800, 1000);
+  h_delta_det0_crvinfomc_time->SetXTitle("Time Delta (ns)");
+
+  //Otherplots
+  //demcpri.momz / sqrt(demcpri.momx^2 + demcpri.momy^2 + demcpri.momz^2) - p_z/p = cos(theta)
+  h_cos_theta = new TH1F("h_cos_theta","p_z / p", 100, -1, 1);
+  h_cos_theta->SetXTitle("cos(#theta)");
+
+  //PDG ID of events with no CRV coincidences
+  h_noCRV_demc_pdg = new TH1F("h_noCRV_demc_pdg", "PDG ID of Particles Producing Events with no CRV Coincidences", 100, -20, 2300);
+  h_noCRV_demc_pdg->SetXTitle("PDG ID");
 
 }
 
 
 /********************************************************************************************************************************************************/
-/////////////////////////////////////////////////////    Clean Up Histograms    //////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////    Clean Up Histograms & Graphs   //////////////////////////////////////////////////////////////////
 
 void deleteHists()
 {
@@ -201,6 +237,17 @@ void deleteHists()
   h_demcent_d0->Delete();
   h_det0_vs_CRVtimeWindowStart->Delete();
   h_det0_vs_crvinfomc_time->Delete();
+  h_delta_det0_CRVtimeWindowStart->Delete();
+  h_delta_det0_crvinfomc_time->Delete();
+  h_cos_theta->Delete();
+  h_noCRV_demc_pdg->Delete();
+
+  g_crvinfomc_z0_vs_x0->Delete(); 
+  g_crvinfomc_z0_vs_y0->Delete();
+  g_crvinfomc_primaryZ_vs_X->Delete();
+  g_det0_vs_CRVtimeWindowStart->Delete();
+  g_det0_vs_crvinfomc_time->Delete();
+
 }
 
 
@@ -243,7 +290,6 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
       cutIdentifier = "";
     }
   
-  
   //Initialize the histograms
   initializeHists(makeCuts);
   
@@ -254,7 +300,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
 
   //crvinfomc_x0
   canv->cd();
-  tree->Draw("crvinfomc._x[0]>>h_crvinfomc_x0",cuts, "");
+  tree->Draw("crvinfomc._x[0]/1000>>h_crvinfomc_x0",cuts, "");
   h_crvinfomc_x0 = (TH1F*) gDirectory->Get("h_crvinfomc_x0");
   h_crvinfomc_x0->Draw("hist");
   canv->SaveAs(("standardizedPlots/crvinfomc_x0" + cutIdentifier + ".pdf").c_str());
@@ -263,7 +309,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   logCanv->SaveAs(("standardizedPlots/crvinfomc_x0_logY" + cutIdentifier + ".pdf").c_str());
   
   //crvinfomc_y0
-  tree->Draw("crvinfomc._y[0]>>+h_crvinfomc_y0",cuts, "goff");
+  tree->Draw("crvinfomc._y[0]/1000>>+h_crvinfomc_y0",cuts, "goff");
   h_crvinfomc_y0 = (TH1F*) gDirectory->Get("h_crvinfomc_y0");
   canv->cd();
   h_crvinfomc_y0->Draw();
@@ -273,7 +319,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   logCanv->SaveAs(("standardizedPlots/crvinfomc_y0_logY" + cutIdentifier + ".pdf").c_str());
 
   //crvinfomc_z0
-  tree->Draw("crvinfomc._z[0]>>+h_crvinfomc_z0",cuts, "goff");
+  tree->Draw("crvinfomc._z[0]/1000>>+h_crvinfomc_z0",cuts, "goff");
   h_crvinfomc_z0 = (TH1F*) gDirectory->Get("h_crvinfomc_z0");
   canv->cd();
   h_crvinfomc_z0->Draw();
@@ -283,24 +329,41 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   logCanv->SaveAs(("standardizedPlots/crvinfomc_z0_logY" + cutIdentifier + ".pdf").c_str());
 
   //h_crvinfomc_z0_vs_x0
-  tree->Draw("crvinfomc._x[0]:crvinfomc._z[0]>>+h_crvinfomc_z0_vs_x0",cuts, "goff");
+  tree->Draw("crvinfomc._x[0]/1000:crvinfomc._z[0]/1000>>+h_crvinfomc_z0_vs_x0",cuts, "goff");
   canv->cd();
-  h_crvinfomc_z0_vs_x0->Draw();
+  h_crvinfomc_z0_vs_x0->Draw("colz");
   canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_x0" + cutIdentifier + ".pdf").c_str());
 
-  //h_crvinfomc_z0_vs_y0
-  tree->Draw("crvinfomc._y[0]:crvinfomc._z[0]>>+h_crvinfomc_z0_vs_y0",cuts, "goff");
+  tree->Draw("crvinfomc._x[0]/1000:crvinfomc._z[0]/1000>>+g_crvinfomc_z0_vs_x0",cuts, "goff");
+  g_crvinfomc_z0_vs_x0 = (TGraph*) gDirectory->Get("g_crvinfomc_z0_vs_x0");
+  g_crvinfomc_z0_vs_x0->SetTitle("crvinfomc._z[0]:crvinfomc._x[0];z at CRV (m); x at CRV (m)");
   canv->cd();
-  h_crvinfomc_z0_vs_y0->Draw();
+  g_crvinfomc_z0_vs_x0->Draw();
+  canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_x0_graph" + cutIdentifier + ".pdf").c_str());
+
+  //h_crvinfomc_z0_vs_y0
+  tree->Draw("crvinfomc._y[0]/1000:crvinfomc._z[0]/1000>>+h_crvinfomc_z0_vs_y0",cuts, "goff");
+  canv->cd();
+  h_crvinfomc_z0_vs_y0->Draw("colz");
   canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_y0" + cutIdentifier + ".pdf").c_str());
+
+  tree->Draw("crvinfomc._y[0]/1000:crvinfomc._z[0]/1000>>+g_crvinfomc_z0_vs_y0",cuts, "goff");
+  g_crvinfomc_z0_vs_y0 = (TGraph*) gDirectory->Get("g_crvinfomc_z0_vs_y0");
+  g_crvinfomc_z0_vs_y0->SetTitle("crvinfomc._z[0]:crvinfomc._y[0];z at CRV (m); y at CRV (m)");
+  canv->cd();
+  g_crvinfomc_z0_vs_y0->Draw();
+  canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_y0_graph" + cutIdentifier + ".pdf").c_str());
   
   //crvinfomc._primaryX
-  tree->Draw("crvinfomc._primaryX>>+h_crvinfomc_primaryX",cuts, "goff");
+  tree->Draw("crvinfomc._primaryX/1000>>+h_crvinfomc_primaryX",cuts, "goff");
   h_crvinfomc_primaryX = (TH1F*) gDirectory->Get("h_crvinfomc_primaryX");
   canv->cd();
   h_crvinfomc_primaryX->SetTitle("crvinfomc._primaryX");
-  h_crvinfomc_primaryX->SetXTitle("x (mm)");
-  h_crvinfomc_primaryX->SetBins(100, -100000, 100000); 
+  h_crvinfomc_primaryX->SetXTitle("Primary Particle x Pos at Gen Plane (mm)");
+  if (makeCuts)
+    h_crvinfomc_primaryX->SetBins(100, -50, 50);
+  else
+    h_crvinfomc_primaryX->SetBins(100, -27.5, -25.5); 
   h_crvinfomc_primaryX->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryX" + cutIdentifier + ".pdf").c_str());
   logCanv->cd();
@@ -308,11 +371,14 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   logCanv->SaveAs(("standardizedPlots/crvinfomc_primaryX_logY" + cutIdentifier + ".pdf").c_str());
 
   //crvinfomc._primaryY
-  tree->Draw("crvinfomc._primaryY>>+h_crvinfomc_primaryY",cuts, "goff");
+  tree->Draw("crvinfomc._primaryY/1000>>+h_crvinfomc_primaryY",cuts, "goff");
   h_crvinfomc_primaryY = (TH1F*) gDirectory->Get("h_crvinfomc_primaryY");
   h_crvinfomc_primaryY->SetTitle("crvinfomc._primaryY");
-  h_crvinfomc_primaryY->SetXTitle("y (mm)");
-  h_crvinfomc_primaryY->SetBins(10, 15360, 15370); 
+  h_crvinfomc_primaryY->SetXTitle("Primary Particle y Pos at Gen Plane (mm)");
+  if (makeCuts)
+    h_crvinfomc_primaryY->SetBins(25, 15.364, 15.367);
+  else
+  h_crvinfomc_primaryY->SetBins(25, 15.37, 15.41); 
   canv->cd();
   h_crvinfomc_primaryY->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryY" + cutIdentifier + ".pdf").c_str());
@@ -321,11 +387,14 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   logCanv->SaveAs(("standardizedPlots/crvinfomc_primaryY_logY" + cutIdentifier + ".pdf").c_str());
 
   //crvinfomc._primaryZ
-  tree->Draw("crvinfomc._primaryZ>>+h_crvinfomc_primaryZ",cuts, "goff");
+  tree->Draw("crvinfomc._primaryZ/1000>>+h_crvinfomc_primaryZ",cuts, "goff");
   h_crvinfomc_primaryZ = (TH1F*) gDirectory->Get("h_crvinfomc_primaryZ");
   h_crvinfomc_primaryZ->SetTitle("crvinfomc._primaryZ");
-  h_crvinfomc_primaryZ->SetXTitle("z (mm)");
-  h_crvinfomc_primaryZ->SetBins(100, -20000, 40000); 
+  h_crvinfomc_primaryZ->SetXTitle("Primary Particle z Pos at Gen Plane (mm)");
+  if (makeCuts)
+    h_crvinfomc_primaryZ->SetBins(100, -4, 15);
+  else
+    h_crvinfomc_primaryZ->SetBins(100, 6.1, 6.7); 
   canv->cd();
   h_crvinfomc_primaryZ->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ" + cutIdentifier + ".pdf").c_str());
@@ -334,11 +403,17 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   logCanv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_logY" + cutIdentifier + ".pdf").c_str());
 
   //cvinfomc._primaryZ:crvinfomc._primaryX
-  tree->Draw("crvinfomc._primaryX:crvinfomc._primaryZ>>+h_crvinfomc_primaryZ_vs_X",cuts, "goff");
+  tree->Draw("crvinfomc._primaryX/1000:crvinfomc._primaryZ/1000>>+h_crvinfomc_primaryZ_vs_X",cuts, "goff");
   canv->cd();
-  h_crvinfomc_primaryZ_vs_X->Draw();
+  h_crvinfomc_primaryZ_vs_X->Draw("colz");
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X" + cutIdentifier + ".pdf").c_str());
 
+  tree->Draw("crvinfomc._primaryX/1000:crvinfomc._primaryZ/1000>>+g_crvinfomc_primaryZ_vs_X",cuts, "goff");
+  g_crvinfomc_primaryZ_vs_X = (TGraph*) gDirectory->Get("g_crvinfomc_primaryZ_vs_X");
+  g_crvinfomc_primaryZ_vs_X->SetTitle("crvinfomc._primaryZ:crvinfomc._primaryX;z (m); x (m)");
+  canv->cd();
+  g_crvinfomc_primaryZ_vs_X->Draw();
+  canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X_graph" + cutIdentifier + ".pdf").c_str());
 
   //crvinfomc._primaryPdgId
   tree->Draw("crvinfomc._primaryPdgId>>+h_crvinfomc_primaryPdgId",cuts, "goff");
@@ -375,20 +450,20 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   h_deent_d0 = (TH1F*) gDirectory->Get("h_deent_d0");
   canv->cd();
   h_deent_d0->Draw();
-  canv->SaveAs(("deent_d0" + cutIdentifier + ".pdf").c_str());
+  canv->SaveAs(("standardizedPlots/deent_d0" + cutIdentifier + ".pdf").c_str());
   logCanv->cd();
   h_deent_d0->Draw();
-  logCanv->SaveAs(("deent_d0_logY" + cutIdentifier + ".pdf").c_str());
+  logCanv->SaveAs(("standardizedPlots/deent_d0_logY" + cutIdentifier + ".pdf").c_str());
 
   //deent.td
   tree->Draw("deent.td>>+h_deent_td",cuts, "goff");
   h_deent_td = (TH1F*) gDirectory->Get("h_deent_td");
   canv->cd();
   h_deent_td->Draw();
-  canv->SaveAs(("deent_td" + cutIdentifier + ".pdf").c_str());
+  canv->SaveAs(("standardizedPlots/deent_td" + cutIdentifier + ".pdf").c_str());
   logCanv->cd();
   h_deent_td->Draw();
-  logCanv->SaveAs(("deent_td_logY" + cutIdentifier + ".pdf").c_str());
+  logCanv->SaveAs(("standardizedPlots/deent_td_logY" + cutIdentifier + ".pdf").c_str());
 
   //de.t0
   tree->Draw("de.t0>>+h_de_t0",cuts, "goff");
@@ -423,16 +498,72 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   //de.t0:crvinfo._timeWindowStart
   tree->Draw("de.t0:crvinfo._timeWindowStart>>+h_det0_vs_CRVtimeWindowStart",cuts, "goff");
   canv->cd();
-  h_det0_vs_CRVtimeWindowStart->Draw();
+  h_det0_vs_CRVtimeWindowStart->Draw("colz");
   canv->SaveAs(("standardizedPlots/det0_vs_CRVtimeWindowStart" + cutIdentifier + ".pdf").c_str());
+
+  tree->Draw("de.t0:crvinfo._timeWindowStart>>+g_det0_vs_CRVtimeWindowStart",cuts, "goff");
+  g_det0_vs_CRVtimeWindowStart = (TGraph*) gDirectory->Get("g_det0_vs_CRVtimeWindowStart");
+  g_det0_vs_CRVtimeWindowStart->SetTitle("de.t0:crvinfo._timeWindowStart;crvinfo._timeWindowStart; de.t0(m)");
+  canv->cd();
+  g_det0_vs_CRVtimeWindowStart->Draw();
+  canv->SaveAs(("standardizedPlots/det0_vs_CRVtimeWindowStart_graph" + cutIdentifier + ".pdf").c_str());
   
   //de.t0:crvinfomc._time
-   tree->Draw("de.t0:crvinfomc._time>>+h_det0_vs_crvinfomc_time",cuts, "goff");
+  tree->Draw("de.t0:crvinfomc._time>>+h_det0_vs_crvinfomc_time",cuts, "goff");
   canv->cd();
-  h_det0_vs_crvinfomc_time->Draw();
+  h_det0_vs_crvinfomc_time->Draw("colz");
   canv->SaveAs(("standardizedPlots/det0_vs_crvinfomc_time" + cutIdentifier + ".pdf").c_str());
 
-  
+  tree->Draw("de.t0:crvinfomc._time>>+g_det0_vs_crvinfomc_time",cuts, "goff");
+  g_det0_vs_crvinfomc_time = (TGraph*) gDirectory->Get("g_det0_vs_crvinfomc_time");
+  g_det0_vs_crvinfomc_time->SetTitle("de.t0:crvinfo._crvinfomc_time;crvinfomc._time; de.t0(m)");
+  canv->cd();
+  g_det0_vs_crvinfomc_time->Draw();
+  canv->SaveAs(("standardizedPlots/det0_vs_crvinfomc_time_graph" + cutIdentifier + ".pdf").c_str());
+
+  //de.t0 - crvinfo._timeWindowStart
+  tree->Draw("(de.t0 - crvinfo._timeWindowStart)>>+h_delta_det0_CRVtimeWindowStart",cuts, "goff");
+  h_delta_det0_CRVtimeWindowStart = (TH1F*) gDirectory->Get("h_delta_det0_CRVtimeWindowStart");
+  canv->cd();
+  h_delta_det0_CRVtimeWindowStart->Draw();
+  canv->SaveAs(("standardizedPlots/delta_det0_CRVtimeWindowStart" + cutIdentifier + ".pdf").c_str());
+  logCanv->cd();
+  h_delta_det0_CRVtimeWindowStart->Draw();
+  logCanv->SaveAs(("standardizedPlots/delta_det0_CRVtimeWindowStart_logY" + cutIdentifier + ".pdf").c_str());
+
+  //de.t0 - crvinfomc._time
+  tree->Draw("(de.t0 - crvinfomc._time)>>+h_delta_det0_crvinfomc_time",cuts, "goff");
+  h_delta_det0_crvinfomc_time = (TH1F*) gDirectory->Get("h_delta_det0_crvinfomc_time");
+  canv->cd();
+  h_delta_det0_crvinfomc_time->Draw();
+  canv->SaveAs(("standardizedPlots/delta_det0_crvinfomc_time" + cutIdentifier + ".pdf").c_str());
+  logCanv->cd();
+  h_delta_det0_crvinfomc_time->Draw();
+  logCanv->SaveAs(("standardizedPlots/delta_det0_crvinfomc_time_logY" + cutIdentifier + ".pdf").c_str());
+
+  //cos(theta) = p_z / p
+  tree->Draw("demcpri.momz / sqrt((demcpri.momx * demcpri.momx)+(demcpri.momy * demcpri.momy)+(demcpri.momz * demcpri.momz)) >>+h_cos_theta",cuts, "goff");
+  h_cos_theta = (TH1F*) gDirectory->Get("h_cos_theta");
+  canv->cd();
+  h_cos_theta->Draw();
+  canv->SaveAs(("standardizedPlots/cos_theta" + cutIdentifier + ".pdf").c_str());
+  logCanv->cd();
+  h_cos_theta->Draw();
+  logCanv->SaveAs(("standardizedPlots/cos_theta_logY" + cutIdentifier + ".pdf").c_str());
+
+  //demc.pdg of events with no CRV coincidences
+  TCut noCRVcoincidences = "@crvinfo.size()<1";
+  tree->Draw("demc.pdg>>+h_noCRV_demc_pdg",cuts + noCRVcoincidences, "goff");
+  h_noCRV_demc_pdg = (TH1F*) gDirectory->Get("h_noCRV_demc_pdg");
+  canv->cd();
+  h_noCRV_demc_pdg->Draw();
+  canv->SaveAs(("standardizedPlots/noCRV_demc_pdg" + cutIdentifier + ".pdf").c_str());
+  logCanv->cd();
+  h_noCRV_demc_pdg->Draw();
+  logCanv->SaveAs(("standardizedPlots/noCRV_demc_pdg_logY" + cutIdentifier + ".pdf").c_str());
+
+
+  //Clean up
   canv->Close();
   logCanv->Close();
   deleteHists();
