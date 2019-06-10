@@ -6,7 +6,7 @@ setup mu2etools
 setup gridexport
 setup dhtools
 
-DSCONF=reco
+DSCONF=digi
 MAINDIR=`pwd`
 WFPROJ=CRY_MT2
 TAG=`date +"%y%m%d%H%M%S"`
@@ -36,7 +36,7 @@ submit_job () {
     RESOURCE="--disk=20GB --memory=5000MB"
 #    RESOURCE="--disk=10GB --memory=12000MB"
     command="mu2eprodsys --clustername="${JN}" --fcllist=$SF --wfproject=$WFPROJ --dsconf=$DSCONF \
-      --dsowner=oksuzian --OS=SL6 ${RESOURCE} --expected-lifetime=23h --code=$CODE \
+      --dsowner=bbarton --OS=SL6 ${RESOURCE} --expected-lifetime=23h --code=$CODE \
       --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC"
     echo "Submitting: " $command
     echo `$command` > $LN 2>&1
@@ -59,10 +59,11 @@ elif [ "$DSCONF" == "DYB" ]; then
     INFCL=Offline/JobConfig/cosmic/cosmic_s1_general_dbay.fcl
 elif [ "$DSCONF" == "digi" ]; then
     #INFCL=Offline/JobConfig/cosmic/cosmic_s3_general_cry.fcl
-    INFCL=Offline/JobConfig/primary/CRY-offspill.fcl
+    INFCL=Offline/JobConfig/primary/CRY-offspill.fcl ##Updated fcl file as of 6/9/19
 #   INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry2_uniq.txt
-    INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry1_concat.txt
-    MERGE=10
+#   INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry1_concat.txt
+    INLIST=/mu2e/app/users/bbarton/submissionLists/cry2_digiList.txt
+    MERGE=500 #10 for CRY1 because they were already concatenated
 elif [ "$DSCONF" == "reco" ]; then
     INFCL=Offline/JobConfig/reco/mcdigis_primary.fcl  #####This is useful for a purely cosmic CRY sample
     #INFCL=Offline/JobConfig/reco/mcdigis_CRY.fcl  ##This is useful for a mixed cry sample
