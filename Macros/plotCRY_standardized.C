@@ -1,7 +1,7 @@
 //Standardized plotting of CRY samples from TrkAna Trees
 //Ben Barton
 //06/09/2019 - Initial version complete
-//06/09/2019 - Added plots, fixed bugs, fine tuned parameters
+//06/10/2019 - Added plots, fixed bugs, fine tuned parameters
 
 
 /********************************************************************************************************************************************************/
@@ -25,6 +25,7 @@
 ////////////////////////////////////////////////////    Define Standard Cuts    //////////////////////////////////////////////////////////////////////////
 
 string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
+//string momentum_cut = "ue.nhits<0";
 string trk_cuts_MDC = "dequal.TrkQualDeM>0.8"; //For original CRY1 analysis this was 0.4
 string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
 string pitch_angle  = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
@@ -290,6 +291,11 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
       cutIdentifier = "";
     }
   
+  cout << "Looking for events which were not produced by a muon that did not produce coincidences in the CRV" << endl;
+  tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg",cuts + "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
+
+  cout <<"\n" << endl;
+
   //Initialize the histograms
   initializeHists(makeCuts);
   
@@ -374,7 +380,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   tree->Draw("crvinfomc._primaryY/1000>>+h_crvinfomc_primaryY",cuts, "goff");
   h_crvinfomc_primaryY = (TH1F*) gDirectory->Get("h_crvinfomc_primaryY");
   h_crvinfomc_primaryY->SetTitle("crvinfomc._primaryY");
-  h_crvinfomc_primaryY->SetXTitle("Primary Particle y Pos at Gen Plane (mm)");
+  h_crvinfomc_primaryY->SetXTitle("Primary Particle y Pos at Gen Plane (m)");
   if (makeCuts)
     h_crvinfomc_primaryY->SetBins(25, 15.364, 15.367);
   else
@@ -390,7 +396,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   tree->Draw("crvinfomc._primaryZ/1000>>+h_crvinfomc_primaryZ",cuts, "goff");
   h_crvinfomc_primaryZ = (TH1F*) gDirectory->Get("h_crvinfomc_primaryZ");
   h_crvinfomc_primaryZ->SetTitle("crvinfomc._primaryZ");
-  h_crvinfomc_primaryZ->SetXTitle("Primary Particle z Pos at Gen Plane (mm)");
+  h_crvinfomc_primaryZ->SetXTitle("Primary Particle z Pos at Gen Plane (m)");
   if (makeCuts)
     h_crvinfomc_primaryZ->SetBins(100, -4, 15);
   else
@@ -410,7 +416,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
 
   tree->Draw("crvinfomc._primaryX/1000:crvinfomc._primaryZ/1000>>+g_crvinfomc_primaryZ_vs_X",cuts, "goff");
   g_crvinfomc_primaryZ_vs_X = (TGraph*) gDirectory->Get("g_crvinfomc_primaryZ_vs_X");
-  g_crvinfomc_primaryZ_vs_X->SetTitle("crvinfomc._primaryZ:crvinfomc._primaryX;z (m); x (m)");
+  g_crvinfomc_primaryZ_vs_X->SetTitle("crvinfomc._primaryZ:crvinfomc._primaryX;z (m); x (mm)");
   canv->cd();
   g_crvinfomc_primaryZ_vs_X->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X_graph" + cutIdentifier + ".pdf").c_str());
@@ -569,5 +575,4 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   deleteHists();
 
 }
-
 
