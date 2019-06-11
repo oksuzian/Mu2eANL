@@ -25,12 +25,14 @@ void Compare_two_plots(std::string variable, const char* cut, int cut_version=0)
   hDBY->SetYTitle("Count (normalized)");
   hCRY->GetYaxis()->SetCanExtend(true);  
 
+  /*
   string xTitle = "";
   cout << "Enter a title for the x-axis for variable = " << variable << endl;
   cin >> xTitle;
   // xTitle = getXaxisTitle(variable);
   hCRY->SetXTitle(xTitle.c_str());
   hDBY->SetXTitle(xTitle.c_str());
+  */
 
   double maxCRY = hCRY->GetBinContent(hCRY->GetMaximumBin())*hCRY->Integral();
   double maxDBY = hCRY->GetBinContent(hDBY->GetMaximumBin())*hDBY->Integral();
@@ -58,10 +60,10 @@ void Compare_two_plots(std::string variable, const char* cut, int cut_version=0)
     if(variable[i] != ']' && variable[i] != '[' && variable[i] != '_') plot_name += variable[i];
 
   c1->SaveAs(Form("plots/%s_%d.pdf", plot_name.c_str(), cut_version));
-  
+  /*
   string buffer = "";
   cout << "Enter any character to see log plot" <<endl;
-  cin >> buffer;
+  cin >> buffer;*/
   c1->SetLogy();
   c1->SaveAs(Form("plots/%s_%d_log.pdf", plot_name.c_str(), cut_version));
   hCRY->Delete();
@@ -104,40 +106,33 @@ void compare_CRY_DBY(){
   tree_cry->SetMarkerColor(kBlue);
   tree_cry->SetLineColor(kBlue);
 
-  std::string momentum_cut = "de.mom>100 && de.mom<110 && ue.nhits<0";
-  // std::string momentum_cut = "de.mom>80 && de.mom<120 && ue.nhits<0";
-  std::string trk_cuts_CD3 = "de.nactive>=25 && de.con>2e-3 && de.p0err<0.25 && de.t0err<0.9";
-  std::string trk_cuts_MDC = "de.trkqual>0.4";
-  std::string pitch_angle  = "de.td>0.57735027 && de.td<1"; //  Excludes beam particles
-  //  std::string pitch_angle  = "de.td>0.57735027 && de.td<1.5"; //  Excludes beam particles
-  std::string min_trans_R  = "de.d0>-80 && de.d0<105"; //  Consistent with coming from the target
-  std::string max_trans_R  = "(demcent.d0+2.0/demcent.om)>450. && (demcent.d0+2.0/demcent.om)<680."; //  Inconsistent with hitting the proton absorber
-  std::string signal_pid   = "dec.eclust>10.0 && dec.eclust<120 && dec.uvchisq<100.0 && (max(dec.dtllr,0.0)+max(dec.epllr,0.0))>1.5";
-  std::string timing_cut   = "de.t0>700 && de.t0<1600";
-  std::string all_cuts_CD3=momentum_cut+"&&"+trk_cuts_CD3+"&&"+pitch_angle+"&&"+min_trans_R+"&&"+max_trans_R+"&&"+signal_pid+"&&"+timing_cut;
-  // std::string all_cuts_MDC=momentum_cut+"&&"+trk_cuts_MDC+"&&"+pitch_angle+"&&"+min_trans_R+"&&"+max_trans_R+"&&"+signal_pid+"&&"+timing_cut;
-  std::string all_cuts_MDC=momentum_cut+"&&"+trk_cuts_MDC+"&&"+pitch_angle+"&&"+min_trans_R+"&&"+max_trans_R;
 
-  std::string signal_all = all_cuts_MDC+"&& crvinfomc._z[0]>13000";
-  // std::string signal_all = all_cuts_MDC;
+  string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
+  //string momentum_cut = "ue.nhits<0"; //No deent mom requirement
+  string trk_cuts_MDC = "dequal.TrkQualDeM>0.8"; //For original CRY1 analysis this was 0.4
+  string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
+  string pitch_angle  = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
+  string min_trans_R  = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
+  string max_trans_R  = "(demcent.d0+2.0/demcent.om)>450. && (demcent.d0+2.0/demcent.om)<680."; //  Inconsistent with hitting the proton absorber
+  string timing_cut   = "de.t0>700 && de.t0<1600"; //unnecessary for unmixed samples
+  string all_cuts_MDC = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+  string all_cuts_MDC_pid = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid;
+  string all_cuts_MDC_mixed = all_cuts_MDC + "&&" + timing_cut;
+  string all_cuts_MDC_pid_mixed = all_cuts_MDC_pid + "&&" + timing_cut;
+  string noCuts = "";
 
-  // Compare_two_plots("ncrv", signal_all.c_str(), 1);
-  // Compare_two_plots("demc.pdg", signal_all.c_str(), 1);
-  // Compare_two_plots("crvinfomc._z[0]", signal_all.c_str(), 1);
-
-  // std::vector<std::string> cuts = { "de.mom>0", all_cuts_MDC, all_cuts_CD3, trk_cuts_CD3, trk_cuts_MDC, pitch_angle,min_trans_R, max_trans_R, signal_pid};
-  std::vector<std::string> cuts = {all_cuts_MDC};
+  std::vector<std::string> cuts = {all_cuts_MDC_pid};
   for (int n=0; n<cuts.size(); n++){
     std::cout << "Cut: " << cuts[n] << std::endl;
 
-    // Compare_two_graphs("crvinfomc._x[0]:crvinfomc._z[0]", "xz", cuts[n].c_str(), signal_all.c_str(), n);
-    // Compare_two_graphs("crvinfomc._y[0]:crvinfomc._z[0]", "yz", cuts[n].c_str(), signal_all.c_str(), n);
+    //Compare_two_graphs("crvinfomc._x[0]:crvinfomc._z[0]", "xz", cuts[n].c_str(), signal_all.c_str(), n);
+    //Compare_two_graphs("crvinfomc._y[0]:crvinfomc._z[0]", "yz", cuts[n].c_str(), signal_all.c_str(), n);
 
     // Compare_two_plots("evtinfo.subrunid+100000*evtinfo.eventid",cuts[n].c_str(), n);
-    // Compare_two_plots("de.mom",cuts[n].c_str(), n);
+    // Compare_two_plots("deent.mom",cuts[n].c_str(), n);
     // Compare_two_plots("demc.pmom", cuts[n].c_str(), n);
-    // Compare_two_plots("de.td", cuts[n].c_str(), n);
-    // Compare_two_plots("de.d0", cuts[n].c_str(), n);
+    // Compare_two_plots("deent.td", cuts[n].c_str(), n);
+    // Compare_two_plots("deent.d0", cuts[n].c_str(), n);
     // Compare_two_plots("de.t0", cuts[n].c_str(), n);
     // Compare_two_plots("demcent.d0", cuts[n].c_str(), n);
     // Compare_two_plots("demcent.om", cuts[n].c_str(), n);
@@ -148,7 +143,7 @@ void compare_CRY_DBY(){
     // Compare_two_plots("de.trkqual", cuts[n].c_str(), n);
     // Compare_two_plots("de.p0err", cuts[n].c_str(), n);
     // Compare_two_plots("de.con", cuts[n].c_str(), n);
-    // Compare_two_plots("de.t0err", cuts[n].c_str(), n);
+    // Compare_two_plots("deent.t0err", cuts[n].c_str(), n);
     // Compare_two_plots("demc.pdg", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ppdg", cuts[n].c_str(), n);
     // Compare_two_plots("demc.prpdg", cuts[n].c_str(), n);
