@@ -4,8 +4,8 @@
 //06/10/2019 - Added plots, fixed bugs, fine tuned parameters
 
 
-/********************************************************************************************************************************************************/
-///////////////////////////////////////////////////////////    Imports    ////////////////////////////////////////////////////////////////////////////////
+/*********************************************************************************************************************************************************/
+///////////////////////////////////////////////////////////    Imports    /////////////////////////////////////////////////////////////////////////////////
 
 //Root headers
 #include <TH1F.h>
@@ -21,8 +21,8 @@
 #include <string>
 
 
-/********************************************************************************************************************************************************/
-////////////////////////////////////////////////////    Define Standard Cuts    //////////////////////////////////////////////////////////////////////////
+/*********************************************************************************************************************************************************/
+////////////////////////////////////////////////////    Define Standard Cuts    ///////////////////////////////////////////////////////////////////////////
 
 string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
 //string momentum_cut = "ue.nhits<0";
@@ -37,9 +37,13 @@ string all_cuts_MDC_pid = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angl
 string all_cuts_MDC_mixed = all_cuts_MDC + "&&" + timing_cut;
 string all_cuts_MDC_pid_mixed = all_cuts_MDC_pid + "&&" + timing_cut;
 
+//Alternative cuts
+string d0is0 = "demcent.d0==0";
+string noMomNoPID = trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
 
-/********************************************************************************************************************************************************/
-///////////////////////////////////////////////////    Define Standard Histograms & Graphs    ////////////////////////////////////////////////////////////
+
+/*********************************************************************************************************************************************************/
+///////////////////////////////////////////////////    Define Standard Histograms & Graphs    /////////////////////////////////////////////////////////////
 
 TH1F *h_crvinfomc_x0;
 TH1F *h_crvinfomc_y0;
@@ -70,6 +74,7 @@ TGraph *g_crvinfomc_z0_vs_y0;
 TGraph *g_crvinfomc_primaryZ_vs_X;
 TGraph *g_det0_vs_CRVtimeWindowStart;
 TGraph *g_det0_vs_crvinfomc_time;
+TGraph *g_cos_theta_vs_pitch;
 
 
 void initializeHists(bool makeCuts)
@@ -102,9 +107,9 @@ void initializeHists(bool makeCuts)
   //Primary Particle
   //crvinfomc._primaryX - x position of the primary particle
   if (makeCuts)
-    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -50, 50);
+    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -5, 5);
   else
-    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -60, 0);
+    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -6, 0);
   h_crvinfomc_primaryX->SetXTitle("x (m)");
 
   //crvinfomc._primaryY - y position of the primary particle
@@ -116,15 +121,15 @@ void initializeHists(bool makeCuts)
 
   //crvinfomc._primaryZ - z position of the primary particle
   if (makeCuts)
-    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -40, 40);
+    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -4, 4);
   else
-    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -100, 100);
+    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -10, 10);
   h_crvinfomc_primaryZ->SetXTitle("z (m)");
 
   //cvinfomc._primaryZ:crvinfomc._primaryX - z vs x position of the primary
-  h_crvinfomc_primaryZ_vs_X = new TH2F("h_crvinfomc_primaryZ_vs_X", "crvinfomc._primaryZ vs crvinfomc._primaryX", 100, -60, 60, 100, -60, 60);
-  h_crvinfomc_primaryZ_vs_X->SetXTitle("x (m)");
-  h_crvinfomc_primaryZ_vs_X->SetYTitle("z (m)");
+  h_crvinfomc_primaryZ_vs_X = new TH2F("h_crvinfomc_primaryZ_vs_X", "crvinfomc._primaryZ vs crvinfomc._primaryX", 100, -6, 6, 100, -6, 6);
+  h_crvinfomc_primaryZ_vs_X->SetXTitle("z (m)");
+  h_crvinfomc_primaryZ_vs_X->SetYTitle("x (m)");
   h_crvinfomc_primaryZ_vs_X->SetStats(false);
 
   //crvinfomc._primaryPgdId - Primary particle ID
@@ -189,7 +194,7 @@ void initializeHists(bool makeCuts)
   h_det0_vs_CRVtimeWindowStart->SetStats(false);
 
   //de.t0:crvinfomc._time - MC Truth time at tracker vs CRV
-  h_det0_vs_crvinfomc_time = new TH2F("h_det0_vs_crvinfomc_time","de.t0:crvinfomc._time", 100, 400, 1750, 100, 400, 1750);
+  h_det0_vs_crvinfomc_time = new TH2F("h_det0_vs_crvinfomc_time","de.t0:crvinfomc._time", 100, -100, 1750, 100, 400, 1750);
   h_det0_vs_crvinfomc_time->SetXTitle("MC Truth t_0 at CRV (ns)");
   h_det0_vs_crvinfomc_time->SetYTitle("t_0 at Tracker (ns)");
   h_det0_vs_crvinfomc_time->SetStats(false);
@@ -208,14 +213,14 @@ void initializeHists(bool makeCuts)
   h_cos_theta->SetXTitle("cos(#theta)");
 
   //PDG ID of events with no CRV coincidences
-  h_noCRV_demc_pdg = new TH1F("h_noCRV_demc_pdg", "PDG ID of Particles Producing Events with no CRV Coincidences", 100, -20, 2300);
+  h_noCRV_demc_pdg = new TH1F("h_noCRV_demc_pdg", "PDG ID of Particles Producing Events with no CRV Coincidences", 100, -300, 2300);
   h_noCRV_demc_pdg->SetXTitle("PDG ID");
 
 }
 
 
-/********************************************************************************************************************************************************/
-/////////////////////////////////////////////////////    Clean Up Histograms & Graphs   //////////////////////////////////////////////////////////////////
+/*********************************************************************************************************************************************************/
+/////////////////////////////////////////////////////    Clean Up Histograms & Graphs   ///////////////////////////////////////////////////////////////////
 
 void deleteHists()
 {
@@ -248,15 +253,16 @@ void deleteHists()
   g_crvinfomc_primaryZ_vs_X->Delete();
   g_det0_vs_CRVtimeWindowStart->Delete();
   g_det0_vs_crvinfomc_time->Delete();
+  g_cos_theta_vs_pitch->Delete();
 
 }
 
 
-/********************************************************************************************************************************************************/
-///////////////////////////////////////////////////    Make Standardized Plots    ////////////////////////////////////////////////////////////////////////
+/*********************************************************************************************************************************************************/
+///////////////////////////////////////////////////    Make Standardized Plots    /////////////////////////////////////////////////////////////////////////
 
 //Plot all standardized histograms
-void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
+void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts, bool scan = false)
 {
   
 
@@ -281,8 +287,8 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
       if (mixed)
 	cuts = TCut(all_cuts_MDC_pid_mixed.c_str());
       else
-	cuts = TCut(all_cuts_MDC_pid.c_str());
-
+       	cuts = TCut(all_cuts_MDC_pid.c_str());
+  
       cutIdentifier = "_cut";
     }
   else
@@ -290,11 +296,41 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
       cuts = "";
       cutIdentifier = "";
     }
-  
-  cout << "Looking for events which were not produced by a muon that did not produce coincidences in the CRV" << endl;
-  tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg",cuts + "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
 
-  cout <<"\n" << endl;
+
+  if (scan)
+    {
+      cout << "Events which were not produced by a muon that did not produce coincidences in the CRV" << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg",cuts + "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
+      cout << "\n" << endl;
+
+      cout << "Non-muon/electron background events" << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "abs(demc.pdg)>211","");
+
+      cout << "mu- background events" << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "(demc.pdg)==13","");
+  
+      cout << "mu+ background events" << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "demc.pdg==-13","");
+  
+      cout << "e+ background events" << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "(demc.pdg)==-11","");
+
+      cout <<"\n" << endl;
+    }
+  else
+    {
+      cout << "\n" << endl;
+      cout << "Number of mu- events = " << tree->GetEntries(cuts + "demc.pdg==13")  << endl;
+      cout << "Number of mu+ events = " << tree->GetEntries(cuts + "demc.pdg==-13")  << endl;
+      cout << "Number of e- events = " << tree->GetEntries(cuts + "demc.pdg==11")  << endl;
+      cout << "Number of e+ events = " << tree->GetEntries(cuts + "demc.pdg==-11")  << endl;
+      cout << "Other events:" << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "abs(demc.pdg)>211","");
+      cout << "Events which were not produced by a muon that did not produce coincidences in the CRV:" << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg",cuts +  "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
+      cout << "\n" << endl;  
+    }
 
   //Initialize the histograms
   initializeHists(makeCuts);
@@ -361,15 +397,15 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_y0_graph" + cutIdentifier + ".pdf").c_str());
   
   //crvinfomc._primaryX
-  tree->Draw("crvinfomc._primaryX/1000>>+h_crvinfomc_primaryX",cuts, "goff");
+  tree->Draw("crvinfomc._primaryX/10000>>+h_crvinfomc_primaryX",cuts, "goff");
   h_crvinfomc_primaryX = (TH1F*) gDirectory->Get("h_crvinfomc_primaryX");
   canv->cd();
   h_crvinfomc_primaryX->SetTitle("crvinfomc._primaryX");
-  h_crvinfomc_primaryX->SetXTitle("Primary Particle x Pos at Gen Plane (mm)");
+  h_crvinfomc_primaryX->SetXTitle("Primary Particle x Pos at Gen Plane (m)");
   if (makeCuts)
-    h_crvinfomc_primaryX->SetBins(100, -50, 50);
+    h_crvinfomc_primaryX->SetBins(100, -5, 5);
   else
-    h_crvinfomc_primaryX->SetBins(100, -27.5, -25.5); 
+    h_crvinfomc_primaryX->SetBins(100, -2.75, -2.55); 
   h_crvinfomc_primaryX->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryX" + cutIdentifier + ".pdf").c_str());
   logCanv->cd();
@@ -384,7 +420,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   if (makeCuts)
     h_crvinfomc_primaryY->SetBins(25, 15.364, 15.367);
   else
-  h_crvinfomc_primaryY->SetBins(25, 15.37, 15.41); 
+  h_crvinfomc_primaryY->SetBins(50, 15.365, 15.41); 
   canv->cd();
   h_crvinfomc_primaryY->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryY" + cutIdentifier + ".pdf").c_str());
@@ -409,14 +445,14 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   logCanv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_logY" + cutIdentifier + ".pdf").c_str());
 
   //cvinfomc._primaryZ:crvinfomc._primaryX
-  tree->Draw("crvinfomc._primaryX/1000:crvinfomc._primaryZ/1000>>+h_crvinfomc_primaryZ_vs_X",cuts, "goff");
+  tree->Draw("crvinfomc._primaryX/10000:crvinfomc._primaryZ/10000>>+h_crvinfomc_primaryZ_vs_X",cuts, "goff");
   canv->cd();
   h_crvinfomc_primaryZ_vs_X->Draw("colz");
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X" + cutIdentifier + ".pdf").c_str());
 
-  tree->Draw("crvinfomc._primaryX/1000:crvinfomc._primaryZ/1000>>+g_crvinfomc_primaryZ_vs_X",cuts, "goff");
+  tree->Draw("crvinfomc._primaryX/10000:crvinfomc._primaryZ/10000>>+g_crvinfomc_primaryZ_vs_X",cuts, "goff");
   g_crvinfomc_primaryZ_vs_X = (TGraph*) gDirectory->Get("g_crvinfomc_primaryZ_vs_X");
-  g_crvinfomc_primaryZ_vs_X->SetTitle("crvinfomc._primaryZ:crvinfomc._primaryX;z (m); x (mm)");
+  g_crvinfomc_primaryZ_vs_X->SetTitle("crvinfomc._primaryZ:crvinfomc._primaryX;z (m); x (m)");
   canv->cd();
   g_crvinfomc_primaryZ_vs_X->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X_graph" + cutIdentifier + ".pdf").c_str());
@@ -568,6 +604,13 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts)
   h_noCRV_demc_pdg->Draw();
   logCanv->SaveAs(("standardizedPlots/noCRV_demc_pdg_logY" + cutIdentifier + ".pdf").c_str());
 
+  //cos(theta) = p_z / p
+  tree->Draw("(demcpri.momz / sqrt((demcpri.momx * demcpri.momx)+(demcpri.momy * demcpri.momy)+(demcpri.momz * demcpri.momz))):tan(deent.td) >>+g_cos_theta_vs_pitch",cuts, "goff");
+  g_cos_theta_vs_pitch = (TGraph*) gDirectory->Get("g_cos_theta_vs_pitch");
+  g_cos_theta_vs_pitch->SetTitle("cos(#theta):deent.td;tan(Pitch Angle);cos(#theta)");
+  canv->cd();
+  g_cos_theta_vs_pitch->Draw();
+  canv->SaveAs(("standardizedPlots/cos_theta_vs_pitch" + cutIdentifier + ".pdf").c_str());
 
   //Clean up
   canv->Close();
