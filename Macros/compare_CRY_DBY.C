@@ -21,9 +21,10 @@ void Compare_two_plots(std::string variable, const char* cut, int cut_version=0)
   hDBY->SetLineColor(kRed);
   hCRY->SetNormFactor(1.);
   hDBY->SetNormFactor(1.);
-  hCRY->SetYTitle("Count (normalized)");
-  hDBY->SetYTitle("Count (normalized)");
-  hCRY->GetYaxis()->SetCanExtend(true);  
+  hCRY->SetTitle(variable.c_str());
+  hDBY->SetTitle(variable.c_str());
+  hCRY->GetYaxis()->SetCanExtend(true); 
+  hDBY->GetYaxis()->SetCanExtend(true);
 
   /*
   string xTitle = "";
@@ -35,7 +36,7 @@ void Compare_two_plots(std::string variable, const char* cut, int cut_version=0)
   */
 
   double maxCRY = hCRY->GetBinContent(hCRY->GetMaximumBin())*hCRY->Integral();
-  double maxDBY = hCRY->GetBinContent(hDBY->GetMaximumBin())*hDBY->Integral();
+  double maxDBY = hDBY->GetBinContent(hDBY->GetMaximumBin())*hDBY->Integral();
   
   if (maxDBY > maxCRY)
     {
@@ -50,8 +51,8 @@ void Compare_two_plots(std::string variable, const char* cut, int cut_version=0)
     }  
 
   TLegend *leg = new TLegend(0.8,0.8,0.9,0.9);
-  leg->AddEntry(hCRY,Form("CRY: %d", (int)hCRY->GetEntries()),"l");
-  leg->AddEntry(hDBY,Form("DBY: %d", (int)hDBY->GetEntries()),"l");
+  leg->AddEntry(hCRY,Form("CRY-1: %d", (int)hCRY->GetEntries()),"l");
+  leg->AddEntry(hDBY,Form("CRY-2: %d", (int)hDBY->GetEntries()),"l");
   leg->Draw("same");
 
   std::string plot_name;
@@ -94,10 +95,11 @@ void Compare_two_graphs(const char* variable, const char* name, const char* cut1
 
 
 void compare_CRY_DBY(){
-  TFile file1("/mu2e/data/users/oksuzian/nts.oksuzian.trkanadigi.trkana_prov743_test1.root");
-  TFile file2("/mu2e/data/users/oksuzian/nts.oksuzian.trkana.mix.cry1.root");
-  tree_cry = (TTree*) file2.Get("TrkAnaNeg/trkana");
+  TFile file1("/mu2e/data/users/bbarton/CRY2/TrkAnaTrees/cry2_trkana.root");
+  TFile file2("/mu2e/data/users/bbarton/CRY1/TrkAnaTrees/cry1_unmixedTrkAna.root");
   tree_dby = (TTree*) file1.Get("TrkAnaNeg/trkana");
+  tree_cry = (TTree*) file2.Get("TrkAnaNeg/trkana");
+  
   //  tree_pos = (TTree*) file1.Get("TrkAnaPos/trkana");
 
   tree_dby->SetLineColor(kRed);
@@ -125,41 +127,41 @@ void compare_CRY_DBY(){
   for (int n=0; n<cuts.size(); n++){
     std::cout << "Cut: " << cuts[n] << std::endl;
 
-    //Compare_two_graphs("crvinfomc._x[0]:crvinfomc._z[0]", "xz", cuts[n].c_str(), signal_all.c_str(), n);
-    //Compare_two_graphs("crvinfomc._y[0]:crvinfomc._z[0]", "yz", cuts[n].c_str(), signal_all.c_str(), n);
+    //  Compare_two_graphs("crvinfomc._x[0]:crvinfomc._z[0]", "xz", cuts[n].c_str(), cuts[n].c_str(), n);
+    // Compare_two_graphs("crvinfomc._y[0]:crvinfomc._z[0]", "yz", cuts[n].c_str(), cuts[n].c_str(), n);
 
     // Compare_two_plots("evtinfo.subrunid+100000*evtinfo.eventid",cuts[n].c_str(), n);
-    // Compare_two_plots("deent.mom",cuts[n].c_str(), n);
-    // Compare_two_plots("demc.pmom", cuts[n].c_str(), n);
-    // Compare_two_plots("deent.td", cuts[n].c_str(), n);
-    // Compare_two_plots("deent.d0", cuts[n].c_str(), n);
-    // Compare_two_plots("de.t0", cuts[n].c_str(), n);
-    // Compare_two_plots("demcent.d0", cuts[n].c_str(), n);
-    // Compare_two_plots("demcent.om", cuts[n].c_str(), n);
+    Compare_two_plots("deent.mom",cuts[n].c_str(), n);
+    Compare_two_plots("demc.pmom", cuts[n].c_str(), n);
+    Compare_two_plots("deent.td", cuts[n].c_str(), n);
+    Compare_two_plots("deent.d0", cuts[n].c_str(), n);
+    Compare_two_plots("de.t0", cuts[n].c_str(), n);
+    Compare_two_plots("demcent.d0", cuts[n].c_str(), n);
+    Compare_two_plots("demcent.om", cuts[n].c_str(), n);
     // Compare_two_plots("dec.eclust", cuts[n].c_str(), n);
     // Compare_two_plots("dec.uvchisq", cuts[n].c_str(), n);
     // Compare_two_plots("dec.dtllr", cuts[n].c_str(), n);
     // Compare_two_plots("dec.epllr", cuts[n].c_str(), n);
-    // Compare_two_plots("de.trkqual", cuts[n].c_str(), n);
+    Compare_two_plots("dequal.TrkQualDeM", cuts[n].c_str(), n);
     // Compare_two_plots("de.p0err", cuts[n].c_str(), n);
     // Compare_two_plots("de.con", cuts[n].c_str(), n);
     // Compare_two_plots("deent.t0err", cuts[n].c_str(), n);
-    // Compare_two_plots("demc.pdg", cuts[n].c_str(), n);
-    // Compare_two_plots("demc.ppdg", cuts[n].c_str(), n);
+    Compare_two_plots("demc.pdg", cuts[n].c_str(), n);
+    Compare_two_plots("demc.ppdg", cuts[n].c_str(), n);
     // Compare_two_plots("demc.prpdg", cuts[n].c_str(), n);
-    // Compare_two_plots("demc.nambig", cuts[n].c_str(), n);
+    Compare_two_plots("demc.nambig", cuts[n].c_str(), n);
     Compare_two_plots("demc.ngood", cuts[n].c_str(), n);
-    // Compare_two_plots("demc.nactive", cuts[n].c_str(), n);
+    Compare_two_plots("demc.nactive", cuts[n].c_str(), n);
     Compare_two_plots("demc.nhits", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ndigigood", cuts[n].c_str(), n);
     // Compare_two_plots("demc.ndigi", cuts[n].c_str(), n);    
-    // Compare_two_plots("crvinfomc._x[0]", cuts[n].c_str(), n);
-    // Compare_two_plots("crvinfomc._y[0]", cuts[n].c_str(), n);
-    // Compare_two_plots("crvinfomc._z[0]", cuts[n].c_str(), n);
+    Compare_two_plots("crvinfomc._x[0]", cuts[n].c_str(), n);
+    Compare_two_plots("crvinfomc._y[0]", cuts[n].c_str(), n);
+    Compare_two_plots("crvinfomc._z[0]", cuts[n].c_str(), n);
 
-    string buffer = "";
+    /* string buffer = "";
     cout << "Enter any character to make the next plot" <<endl;
-    cin >> buffer;;
+    cin >> buffer;;*/
   }
 
   // TCanvas *c1 = new TCanvas("c1","c1",1800,600);

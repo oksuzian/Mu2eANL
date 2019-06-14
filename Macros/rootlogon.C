@@ -51,7 +51,7 @@ gStyle->SetTitleSize(tsize,"z");
 //use bold lines and markers
 gStyle->SetMarkerStyle(1);
 gStyle->SetMarkerSize(1.0);
-gStyle->SetHistLineWidth(2.);
+gStyle->SetHistLineWidth(3.);
 gStyle->SetLineStyleString(2,"[12 12]"); // postscript dashes
 
 //get rid of X error bars and y error bar caps
