@@ -24,6 +24,7 @@
 /*********************************************************************************************************************************************************/
 ////////////////////////////////////////////////////    Define Standard Cuts    ///////////////////////////////////////////////////////////////////////////
 
+//Signal cuts
 string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
 //string momentum_cut = "ue.nhits<0";
 string trk_cuts_MDC = "dequal.TrkQualDeM>0.8"; //For original CRY1 analysis this was 0.4
@@ -40,7 +41,7 @@ string all_cuts_MDC_pid_mixed = all_cuts_MDC_pid + "&&" + timing_cut;
 //Alternative cuts
 string d0is0 = "demcent.d0==0";
 string noMomNoPID = trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-
+string testCut = "ue.nhits<0&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R;
 
 /*********************************************************************************************************************************************************/
 ///////////////////////////////////////////////////    Define Standard Histograms & Graphs    /////////////////////////////////////////////////////////////
@@ -289,6 +290,8 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
       else
        	cuts = TCut(all_cuts_MDC_pid.c_str());
   
+      cuts = TCut(testCut.c_str());
+
       cutIdentifier = "_cut";
     }
   else
@@ -328,7 +331,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
       cout << "Other events:" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "abs(demc.pdg)>211","");
       cout << "Events which were not produced by a muon that did not produce coincidences in the CRV:" << endl;
-      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg",cuts +  "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg:demc.pdg",cuts +  "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
       cout << "\n" << endl;  
     }
 
