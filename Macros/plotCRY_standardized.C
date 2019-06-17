@@ -290,7 +290,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
       else
        	cuts = TCut(all_cuts_MDC_pid.c_str());
   
-      cuts = TCut(testCut.c_str());
+      // cuts = TCut(testCut.c_str());
 
       cutIdentifier = "_cut";
     }
