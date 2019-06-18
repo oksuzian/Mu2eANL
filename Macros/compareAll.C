@@ -20,11 +20,11 @@ typedef struct{
 
 //Signal cuts
 string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
-string trk_cuts_MDC = "dequal.TrkQualDeM>0.8"; //For original CRY1 analysis this was 0.4
+string trk_cuts_MDC = "dequal.TrkQualDeM>1";; //For original CRY1 analysis this was 0.4
 string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
 string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
 string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
-string max_trans_R = "(demcent.d0+2.0/demcent.om)>450. && (demcent.d0+2.0/demcent.om)<680."; //  Inconsistent with hitting the proton absorber
+string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
 string timing_cut = "de.t0>700 && de.t0<1600"; //unnecessary for unmixed samples
 string all_cuts_MDC = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
 string all_cuts_MDC_mixed = all_cuts_MDC + "&&" + timing_cut;
@@ -39,7 +39,7 @@ string testCut = "ue.nhits<0&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min
 
 //Cut lists & identifiers
 string cuts[NCUTS + 1] = {"", signalCuts, expandedMom};
-string cutIDs[NCUTS + 1] = {"", "_sigCuts", "_expandMomCuts"};
+string cutIDs[NCUTS + 1] = {"", "sigCuts", "expandMomCuts"};
 
 /**********************************************************************************************************************************************************************************/
 //////////////////////////////////////////////////////    Define Standard Parameters for Each Variable   ///////////////////////////////////////////////////////////////////////////
@@ -95,14 +95,14 @@ void defHistParams()
   histParams params_crvinfomc_primaryX;
   params_crvinfomc_primaryX.title = "crvinfomc._primaryX";
   params_crvinfomc_primaryX.xTitle = "Primary Particle x Position (mm)";
-  params_crvinfomc_primaryX.xMins[0] = -300; //No cut limits
-  params_crvinfomc_primaryX.xMaxs[0] = 300;
+  params_crvinfomc_primaryX.xMins[0] = -300000; //No cut limits
+  params_crvinfomc_primaryX.xMaxs[0] = 300000;
   params_crvinfomc_primaryX.nBins[0] = 100;
-  params_crvinfomc_primaryX.xMins[1] = -100; //Signal cut limits
-  params_crvinfomc_primaryX.xMaxs[1] = 200;
+  params_crvinfomc_primaryX.xMins[1] = -100000; //Signal cut limits
+  params_crvinfomc_primaryX.xMaxs[1] = 200000;
   params_crvinfomc_primaryX.nBins[1] = 100;
-  params_crvinfomc_primaryX.xMins[2] = -150; //Expanded mom window limits
-  params_crvinfomc_primaryX.xMaxs[2] = 150;
+  params_crvinfomc_primaryX.xMins[2] = -150000; //Expanded mom window limits
+  params_crvinfomc_primaryX.xMaxs[2] = 150000;
   params_crvinfomc_primaryX.nBins[2] = 100;
   hist_params.push_back(params_crvinfomc_primaryX);
 
@@ -219,7 +219,7 @@ void defHistParams()
   hist_params.push_back(params_de_t0);
 
   histParams params_dequal_trkQualDeM;
-  params_dequal_trkQualDeM.title = "dequal.trkQualDeM";
+  params_dequal_trkQualDeM.title = "dequal.TrkQualDeM";
   params_dequal_trkQualDeM.xTitle = "Downstream e^- : Track Quality";
   params_dequal_trkQualDeM.xMins[0] = 0; //No cut params
   params_dequal_trkQualDeM.xMaxs[0] = 1;
@@ -357,12 +357,14 @@ void compareAll()
 	  hDBY->SetBins(params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
 	  
 	  //Label plots
-	  hCRY1->SetTitle(params.title.c_str());
-	  hCRY2->SetTitle(params.title.c_str());
-	  hDBY->SetTitle(params.title.c_str());
+	  hCRY1->SetTitle((params.title + " : " + cutIDs[cutN]).c_str());
+	  hCRY2->SetTitle((params.title + " : " + cutIDs[cutN]).c_str());
+	  hDBY->SetTitle((params.title + " : " + cutIDs[cutN]).c_str());
 	  hCRY1->SetXTitle(params.xTitle.c_str());
 	  hCRY2->SetXTitle(params.xTitle.c_str());
 	  hDBY->SetXTitle(params.xTitle.c_str());
+
+	  canv->SetLogy(0);
 
 	  //Plot in the order s.t. the plot with the highest peak is plotted first in order to guarantee all plots will be completely visible
 	  double maxCRY1 = hCRY1->GetBinContent(hCRY1->GetMaximumBin());
@@ -388,7 +390,7 @@ void compareAll()
 	    }  
 
 	  //Add legend
-	  TLegend *leg = new TLegend(0.7,0.7,0.85,0.9,"Entries");
+	  TLegend *leg = new TLegend(0.75,0.7,0.85,0.9,"Entries");
 	  leg->AddEntry(hCRY2,Form("CRY-2: %d", (int)hCRY2->GetEntries()),"l");
 	  leg->AddEntry(hCRY1,Form("CRY-1: %d", (int)hCRY1->GetEntries()),"l");
 	  leg->AddEntry(hDBY,Form("DBY: %d", (int)hDBY->GetEntries()),"l");
@@ -409,9 +411,19 @@ void compareAll()
 	  if (params.title == "p_z / p")
 	    plot_name = "cos_theta";
 
-	  canv->SaveAs(Form("comparisonPlots/%s%s.pdf", plot_name.c_str(), cutIDs[cutN].c_str()));
-	  canv->SetLogy();
-	  canv->SaveAs(Form("comparisonPlots/%s%s_log.pdf", plot_name.c_str(), cutIDs[cutN].c_str()));
+	  if (cutN > 0)
+	    {
+	      canv->SaveAs(Form("standardizedPlots/comparisonPlots/%s_%s.png", plot_name.c_str(), cutIDs[cutN].c_str()));
+	      canv->SetLogy();
+	      canv->SaveAs(Form("standardizedPlots/comparisonPlots/%s_%s_log.png", plot_name.c_str(), cutIDs[cutN].c_str()));
+	    }
+	  else
+	    {
+	      canv->SaveAs(Form("standardizedPlots/comparisonPlots/%s.png", plot_name.c_str()));
+	      canv->SetLogy();
+	      canv->SaveAs(Form("standardizedPlots/comparisonPlots/%s_log.png", plot_name.c_str()));
+	    }
+
  
 	  hCRY1->Delete();
 	  hCRY2->Delete();
