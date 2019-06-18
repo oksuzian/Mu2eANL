@@ -20,7 +20,7 @@ typedef struct{
 
 //Signal cuts
 string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
-string trk_cuts_MDC = "dequal.TrkQualDeM>1";; //For original CRY1 analysis this was 0.4
+string trk_cuts_MDC = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
 string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
 string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
 string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
