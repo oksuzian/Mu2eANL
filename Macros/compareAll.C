@@ -1,10 +1,12 @@
-//Produce overlaid comparison plots of CRY-1, CRY-2, and DBY, with the same binning
+//Produce overlaid comparison plots of CRY-1, CRY-2, and DBY histograms with the same binning
 //Based off old_compareAll.CRY & plotCRY_standardized.C
+//Ben Barton
+//bbarton@virginia.edu
 
 //Number of cut variations to plot (not including no cuts as a variation)
 const int NCUTS = 2;
 
-//Struct to hold parameters for a histograms in a contained package 
+//Struct to hold parameters for a histograms in a contained unit 
 //Arrays should be the length of the number of cut variations to be plotted
 typedef struct{
   double xMins[NCUTS + 1];
@@ -19,31 +21,33 @@ typedef struct{
 //////////////////////////////////////////////////////////////    Define Cuts    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Signal cuts
-string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
-string trk_cuts_MDC = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
+string momentum_cut = "deent.mom>100 && deent.mom<110"; 
+string no_upstream = "ue.status<0";
+string trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
 string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
 string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
 string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
 string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
-string timing_cut = "de.t0>700 && de.t0<1600"; //unnecessary for unmixed samples
-string all_cuts_MDC = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string all_cuts_MDC_mixed = all_cuts_MDC + "&&" + timing_cut;
-string signalCuts = all_cuts_MDC + "&&" + trk_cut_pid;
-string signalCuts_mixed = signalCuts + "&&" + timing_cut;
-string expandedMom = "ue.nhits<0&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid; //Expanded momentum window cut
+string timing_cut = "de.t0>700 && de.t0<1600"; // Official cuts 1695 upper threshold
+string all_cuts_MDC = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+string signalCuts = all_cuts_MDC + "&&" + trk_cut_pid + "&&" + timing_cut;
+string noMom = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid + "&&" + timing_cut; 
 
 //Alternative cuts
 string d0is0 = "demcent.d0==0";
-string noMomNoPID = trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string testCut = "ue.nhits<0&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R;
+string noMomNoPID = trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+string testCut = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R;
 
-//Cut lists & identifiers
-string cuts[NCUTS + 1] = {"", signalCuts, expandedMom};
-string cutIDs[NCUTS + 1] = {"", "sigCuts", "expandMomCuts"};
+//Cut lists & identifiers // Add any additional cuts that you want to make to this list
+string cuts[NCUTS + 1] = {"", signalCuts, noMom};
+string cutIDs[NCUTS + 1] = {"", "sigCuts", "noMomCut"};
 
 /**********************************************************************************************************************************************************************************/
 //////////////////////////////////////////////////////    Define Standard Parameters for Each Variable   ///////////////////////////////////////////////////////////////////////////
 
+
+//This seems clunky but is the most efficient way to define a scalable number of histograms with predefined characteristics. Initializing new Histograms for each would be
+//innefficient and messy.To add a new histogram
 
 //Set the parameters for the histograms
 vector<histParams> hist_params;
@@ -53,7 +57,7 @@ void defHistParams()
   histParams params_crvinfomc_x0;
   params_crvinfomc_x0.title = "crvinfomc._x[0]";
   params_crvinfomc_x0.xTitle = "MC Truth: x at CRV (mm)";
-  params_crvinfomc_x0.xMins[0] = -7400; //No cut limits
+  params_crvinfomc_x0.xMins[0] = -7000; //No cut limits
   params_crvinfomc_x0.xMaxs[0] = 0;
   params_crvinfomc_x0.nBins[0] = 100;
   params_crvinfomc_x0.xMins[1] = -7000; //Signal cut limits
@@ -95,41 +99,41 @@ void defHistParams()
   histParams params_crvinfomc_primaryX;
   params_crvinfomc_primaryX.title = "crvinfomc._primaryX";
   params_crvinfomc_primaryX.xTitle = "Primary Particle x Position (mm)";
-  params_crvinfomc_primaryX.xMins[0] = -300000; //No cut limits
-  params_crvinfomc_primaryX.xMaxs[0] = 300000;
+  params_crvinfomc_primaryX.xMins[0] = -80000; //No cut limits
+  params_crvinfomc_primaryX.xMaxs[0] = 80000;
   params_crvinfomc_primaryX.nBins[0] = 100;
-  params_crvinfomc_primaryX.xMins[1] = -100000; //Signal cut limits
-  params_crvinfomc_primaryX.xMaxs[1] = 200000;
+  params_crvinfomc_primaryX.xMins[1] = -80000; //Signal cut limits
+  params_crvinfomc_primaryX.xMaxs[1] = 80000;
   params_crvinfomc_primaryX.nBins[1] = 100;
-  params_crvinfomc_primaryX.xMins[2] = -150000; //Expanded mom window limits
-  params_crvinfomc_primaryX.xMaxs[2] = 150000;
+  params_crvinfomc_primaryX.xMins[2] = -80000; //Expanded mom window limits
+  params_crvinfomc_primaryX.xMaxs[2] = 80000;
   params_crvinfomc_primaryX.nBins[2] = 100;
   hist_params.push_back(params_crvinfomc_primaryX);
 
   histParams params_crvinfomc_primaryY;
   params_crvinfomc_primaryY.title = "crvinfomc._primaryY";
   params_crvinfomc_primaryY.xTitle = "Primary Particle y Position (mm)";
-  params_crvinfomc_primaryY.xMins[0] = -5500; //No cut limits
-  params_crvinfomc_primaryY.xMaxs[0] = 16000;
+  params_crvinfomc_primaryY.xMins[0] = 15364; //No cut limits
+  params_crvinfomc_primaryY.xMaxs[0] = 15410;
   params_crvinfomc_primaryY.nBins[0] = 100;
-  params_crvinfomc_primaryY.xMins[1] = 15365; //Signal cut limits
-  params_crvinfomc_primaryY.xMaxs[1] = 15366;
-  params_crvinfomc_primaryY.nBins[1] = 10;
+  params_crvinfomc_primaryY.xMins[1] = 15364; //Signal cut limits
+  params_crvinfomc_primaryY.xMaxs[1] = 15410;
+  params_crvinfomc_primaryY.nBins[1] = 100;
   params_crvinfomc_primaryY.xMins[2] = 15365; //Expanded mom window limits
-  params_crvinfomc_primaryY.xMaxs[2] = 15366;
-  params_crvinfomc_primaryY.nBins[2] = 10;
+  params_crvinfomc_primaryY.xMaxs[2] = 15410;
+  params_crvinfomc_primaryY.nBins[2] = 100;
   hist_params.push_back(params_crvinfomc_primaryY);
 
   histParams params_crvinfomc_primaryZ;
   params_crvinfomc_primaryZ.title = "crvinfomc._primaryZ";
   params_crvinfomc_primaryZ.xTitle = "Primary Particle z Position (mm)";
-  params_crvinfomc_primaryZ.xMins[0] = -150000; //No cut limits
-  params_crvinfomc_primaryZ.xMaxs[0] = 150000;
+  params_crvinfomc_primaryZ.xMins[0] = -80000; //No cut limits
+  params_crvinfomc_primaryZ.xMaxs[0] = 80000;
   params_crvinfomc_primaryZ.nBins[0] = 100;
-  params_crvinfomc_primaryZ.xMins[1] = -25000; //Signal cut limits
-  params_crvinfomc_primaryZ.xMaxs[1] = 60000;
+  params_crvinfomc_primaryZ.xMins[1] = -80000; //Signal cut limits
+  params_crvinfomc_primaryZ.xMaxs[1] = 80000;
   params_crvinfomc_primaryZ.nBins[1] = 100;
-  params_crvinfomc_primaryZ.xMins[2] = -50000; //Expanded mom window limits
+  params_crvinfomc_primaryZ.xMins[2] = -80000; //Expanded mom window limits
   params_crvinfomc_primaryZ.xMaxs[2] = 80000;
   params_crvinfomc_primaryZ.nBins[2] = 100;
   hist_params.push_back(params_crvinfomc_primaryZ);
@@ -155,25 +159,25 @@ void defHistParams()
   params_crvinfomc_primaryE.xMaxs[0] = 4300000;
   params_crvinfomc_primaryE.nBins[0] = 100;
   params_crvinfomc_primaryE.xMins[1] = 0; //Signal cut limits
-  params_crvinfomc_primaryE.xMaxs[1] = 1000;
+  params_crvinfomc_primaryE.xMaxs[1] = 1000000;
   params_crvinfomc_primaryE.nBins[1] = 100;
   params_crvinfomc_primaryE.xMins[2] = 0; //Expanded mom window limits
-  params_crvinfomc_primaryE.xMaxs[2] = 1000;
+  params_crvinfomc_primaryE.xMaxs[2] = 1000000;
   params_crvinfomc_primaryE.nBins[2] = 100;
   hist_params.push_back(params_crvinfomc_primaryE);
 
   histParams params_deent_mom;
   params_deent_mom.title = "deent.mom";
   params_deent_mom.xTitle = "Downstream e^- : Momentum (MeV/c)";
-  params_deent_mom.xMins[0] = 0; //No cut params
-  params_deent_mom.xMaxs[0] = 2500;
+  params_deent_mom.xMins[0] = 40; //No cut params
+  params_deent_mom.xMaxs[0] = 300;
   params_deent_mom.nBins[0] = 100;
   params_deent_mom.xMins[1] = 100; //Signal cut params
   params_deent_mom.xMaxs[1] = 110;
-  params_deent_mom.nBins[1] = 20;
-  params_deent_mom.xMins[2] = 65; //Expanded mom window cut params
-  params_deent_mom.xMaxs[2] = 155;
-  params_deent_mom.nBins[2] = 90;
+  params_deent_mom.nBins[1] = 20; 
+  params_deent_mom.xMins[2] = 60; //Expanded mom window cut params
+  params_deent_mom.xMaxs[2] = 160;
+  params_deent_mom.nBins[2] = 100;
   hist_params.push_back(params_deent_mom);
   
   histParams params_deent_d0;
@@ -207,14 +211,14 @@ void defHistParams()
   histParams params_de_t0;
   params_de_t0.title = "de.t0";
   params_de_t0.xTitle = "Downstream e^- : t_0 (s)";
-  params_de_t0.xMins[0] = 0; //No cut params
-  params_de_t0.xMaxs[0] = 1400;
+  params_de_t0.xMins[0] = 400; //No cut params
+  params_de_t0.xMaxs[0] = 1700;
   params_de_t0.nBins[0] = 100;
   params_de_t0.xMins[1] = 500; //Signal cut params
   params_de_t0.xMaxs[1] = 1700;
   params_de_t0.nBins[1] = 100;
   params_de_t0.xMins[2] = 500; //Expanded mom window cut params
-  params_de_t0.xMaxs[2] = 700;
+  params_de_t0.xMaxs[2] = 1700;
   params_de_t0.nBins[2] = 100;
   hist_params.push_back(params_de_t0);
 
@@ -260,19 +264,19 @@ void defHistParams()
   params_delta_det0_CRVtimeWindowStart.nBins[2] = 100;
   hist_params.push_back(params_delta_det0_CRVtimeWindowStart);
 
-  histParams params_cos_theta;
-  params_cos_theta.title = "p_z / p";
-  params_cos_theta.xTitle = "cos(#theta)";
-  params_cos_theta.xMins[0] = 0; //No cuts params
-  params_cos_theta.xMaxs[0] = 1;
-  params_cos_theta.nBins[0] = 100;
-  params_cos_theta.xMins[1] = 0; //Signal cuts params
-  params_cos_theta.xMaxs[1] = 1;
-  params_cos_theta.nBins[1] = 100;
-  params_cos_theta.xMins[2] = 0; //Expanded mom cut params
-  params_cos_theta.xMaxs[2] = 1;
-  params_cos_theta.nBins[2] = 100;
-  hist_params.push_back(params_cos_theta);
+  histParams params_pz_p;
+  params_pz_p.title = "p_z / p";
+  params_pz_p.xTitle = "p_z / p";
+  params_pz_p.xMins[0] = -1; //No cuts params
+  params_pz_p.xMaxs[0] = 1;
+  params_pz_p.nBins[0] = 100;
+  params_pz_p.xMins[1] = -1; //Signal cuts params
+  params_pz_p.xMaxs[1] = 1;
+  params_pz_p.nBins[1] = 100;
+  params_pz_p.xMins[2] = -1; //Expanded mom cut params
+  params_pz_p.xMaxs[2] = 1;
+  params_pz_p.nBins[2] = 100;
+  hist_params.push_back(params_pz_p);
 
   histParams params_noCRV_demc_pdg;
   params_noCRV_demc_pdg.title = "demc.pdg";
@@ -288,6 +292,48 @@ void defHistParams()
   params_noCRV_demc_pdg.nBins[2] = 30;
   hist_params.push_back(params_noCRV_demc_pdg); 
 
+  histParams params_demcpri_posz;
+  params_demcpri_posz.title = "demcpri.posz";
+  params_demcpri_posz.xTitle = "MC Truth Primary z Position (mm)";
+  params_demcpri_posz.xMins[0] = -80000; //No cut params
+  params_demcpri_posz.xMaxs[0] = 80000;
+  params_demcpri_posz.nBins[0] = 100;
+  params_demcpri_posz.xMins[1] = -80000; //Signal cut params
+  params_demcpri_posz.xMaxs[1] = 80000;
+  params_demcpri_posz.nBins[1] = 100;
+  params_demcpri_posz.xMins[2] = -80000; //Expanded mom window cut params
+  params_demcpri_posz.xMaxs[2] = 80000;
+  params_demcpri_posz.nBins[2] = 100;
+  hist_params.push_back(params_demcpri_posz);
+
+  histParams params_demcpri_posx;
+  params_demcpri_posx.title = "demcpri.posx";
+  params_demcpri_posx.xTitle = "MC Truth Primary x Position (mm)";
+  params_demcpri_posx.xMins[0] = -80000; //No cut params
+  params_demcpri_posx.xMaxs[0] = 80000;
+  params_demcpri_posx.nBins[0] = 100;
+  params_demcpri_posx.xMins[1] = -80000; //Signal cut params
+  params_demcpri_posx.xMaxs[1] = 80000;
+  params_demcpri_posx.nBins[1] = 100;
+  params_demcpri_posx.xMins[2] = -80000; //Expanded mom window cut params
+  params_demcpri_posx.xMaxs[2] = 80000;
+  params_demcpri_posx.nBins[2] = 100;
+  hist_params.push_back(params_demcpri_posx);
+
+  histParams params_demcpri_mom;
+  params_demcpri_mom.title = "sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))";
+  params_demcpri_mom.xTitle = "MC Truth Primary Momentum (MeV/c)";
+  params_demcpri_mom.xMins[0] = 0; //No cut params
+  params_demcpri_mom.xMaxs[0] = 1000000;
+  params_demcpri_mom.nBins[0] = 100;
+  params_demcpri_mom.xMins[1] = 0; //Signal cut params
+  params_demcpri_mom.xMaxs[1] = 500000;
+  params_demcpri_mom.nBins[1] = 100;
+  params_demcpri_mom.xMins[2] = 0; //Expanded mom window cut params
+  params_demcpri_mom.xMaxs[2] = 500000;
+  params_demcpri_mom.nBins[2] = 100;
+  hist_params.push_back(params_demcpri_mom);
+
 }
 
 
@@ -295,9 +341,11 @@ void defHistParams()
 /**********************************************************************************************************************************************************************************/
 /////////////////////////////////////////////////////////////////    Make the Plots    /////////////////////////////////////////////////////////////////////////////////////////////
 
+//Makes plots of CRY1, CRY2, & DBY overlaid for each histParam struct in defHistParams()
+//Files are saved as pngs/pdfs
 void compareAll()
 {
-  defHistParams();
+  defHistParams(); //Define the histograms to be made
 
   gStyle->SetOptStat(0);
 
@@ -314,26 +362,31 @@ void compareAll()
     {
       for (int v = 0; v < hist_params.size(); v++) //For each variable
 	{
+
 	  histParams params = hist_params.at(v);
 
-	  if (params.title == "p_z / p")
+	  TH1F *hCRY1 = new TH1F("hCRY1", params.title.c_str(), params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
+	  TH1F *hCRY2 = new TH1F("hCRY2", params.title.c_str(), params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);;
+	  TH1F *hDBY = new TH1F("hDBY", params.title.c_str(), params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
+
+	  if (params.title == "p_z / p") //Title of this hist is not the expression for which to fill it so it must be treated as a special case
 	    {
-	      tree_cry1->Draw(Form("%s>>hCRY1","demcpri.momz/sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))"),cuts[cutN].c_str(),"goff");
-	      tree_cry2->Draw(Form("%s>>hCRY2","demcpri.momz/sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))"),cuts[cutN].c_str(),"goff");
-	      tree_dby->Draw(Form("%s>>hDBY","demcpri.momz/sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))"),cuts[cutN].c_str(),"goff");
+	      tree_cry1->Draw(Form("%s>>+hCRY1","demcpri.momz/sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))"),cuts[cutN].c_str(),"goff");
+	      tree_cry2->Draw(Form("%s>>+hCRY2","demcpri.momz/sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))"),cuts[cutN].c_str(),"goff");
+	      tree_dby->Draw(Form("%s>>+hDBY","demcpri.momz/sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))"),cuts[cutN].c_str(),"goff");
 	    }
 	  else
 	    {
 	      //Get data from trees and store in histograms
-	      tree_cry1->Draw(Form("%s>>hCRY1", params.title.c_str()), cuts[cutN].c_str() , "goff");
-	      tree_cry2->Draw(Form("%s>>hCRY2", params.title.c_str()), cuts[cutN].c_str(), "goff");
-	      tree_dby->Draw(Form("%s>>hDBY", params.title.c_str()), cuts[cutN].c_str(), "goff");
+	      tree_cry1->Draw(Form("%s>>+hCRY1", params.title.c_str()), cuts[cutN].c_str() , "goff");
+	      tree_cry2->Draw(Form("%s>>+hCRY2", params.title.c_str()), cuts[cutN].c_str(), "goff");
+	      tree_dby->Draw(Form("%s>>+hDBY", params.title.c_str()), cuts[cutN].c_str(), "goff");
 	    }
 	  
-
-	  TH1F *hCRY1 = (TH1F*) gDirectory->Get("hCRY1");
-	  TH1F *hCRY2 = (TH1F*) gDirectory->Get("hCRY2");
-	  TH1F *hDBY = (TH1F*) gDirectory->Get("hDBY");
+	  
+	  hCRY1 = (TH1F*) gDirectory->Get("hCRY1");
+	  hCRY2 = (TH1F*) gDirectory->Get("hCRY2");
+	  hDBY = (TH1F*) gDirectory->Get("hDBY");
 
 	  //Set plot style
 	  hCRY1->SetLineColor(kBlue);
@@ -350,11 +403,6 @@ void compareAll()
 	  hCRY1->Scale(1.0 / hCRY1->Integral());
 	  hCRY2->Scale(1.0 / hCRY2->Integral());
 	  hDBY->Scale(1.0 / hDBY->Integral());
-
-	  //Set to conistent bins
-	  hCRY1->SetBins(params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
-	  hCRY2->SetBins(params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
-	  hDBY->SetBins(params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
 	  
 	  //Label plots
 	  hCRY1->SetTitle((params.title + " : " + cutIDs[cutN]).c_str());
@@ -363,9 +411,10 @@ void compareAll()
 	  hCRY1->SetXTitle(params.xTitle.c_str());
 	  hCRY2->SetXTitle(params.xTitle.c_str());
 	  hDBY->SetXTitle(params.xTitle.c_str());
-
+	 
+	  //Reset plot to standard axis
 	  canv->SetLogy(0);
-
+	  
 	  //Plot in the order s.t. the plot with the highest peak is plotted first in order to guarantee all plots will be completely visible
 	  double maxCRY1 = hCRY1->GetBinContent(hCRY1->GetMaximumBin());
 	  double maxCRY2 = hCRY2->GetBinContent(hCRY2->GetMaximumBin());
@@ -388,6 +437,7 @@ void compareAll()
 	      hCRY2->Draw("hist same");
 	      hDBY->Draw("hist same");
 	    }  
+	  
 
 	  //Add legend
 	  TLegend *leg = new TLegend(0.75,0.7,0.85,0.9,"Entries");
@@ -409,7 +459,7 @@ void compareAll()
 	    }
 
 	  if (params.title == "p_z / p")
-	    plot_name = "cos_theta";
+	    plot_name = "comp_pz_p";
 
 	  if (cutN > 0)
 	    {
@@ -424,7 +474,7 @@ void compareAll()
 	      canv->SaveAs(Form("standardizedPlots/comparisonPlots/%s_log.png", plot_name.c_str()));
 	    }
 
- 
+	  //Clean up
 	  hCRY1->Delete();
 	  hCRY2->Delete();
 	  hDBY->Delete();
