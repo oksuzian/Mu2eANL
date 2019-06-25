@@ -1,4 +1,4 @@
-//Standardized plotting of CRY samples from TrkAna Trees
+//Produced plots with predefined characteristsics from CRY/DBY trees
 //Ben Barton
 //06/09/2019 - Initial version complete
 //06/10/2019 - Added plots, fixed bugs, fine tuned parameters
@@ -25,25 +25,24 @@
 ////////////////////////////////////////////////////    Define Standard Cuts    ///////////////////////////////////////////////////////////////////////////
 
 //Signal cuts
-string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
-//string momentum_cut = "ue.nhits<0";
-string trk_cuts_MDC = "dequal.TrkQualDeM>0.8"; //For original CRY1 analysis this was 0.4
+string momentum_cut = "deent.mom>100 && deent.mom<110"; //Use wider momentum window than experimental signal window
+string no_upstream = "ue.status<0";
+string trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
 string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
-string pitch_angle  = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
-string min_trans_R  = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
-string max_trans_R  = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
-string timing_cut   = "de.t0>700 && de.t0<1600"; //unnecessary for unmixed samples
-string all_cuts_MDC = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string all_cuts_MDC_pid = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid;
-string all_cuts_MDC_mixed = all_cuts_MDC + "&&" + timing_cut;
-string all_cuts_MDC_pid_mixed = all_cuts_MDC_pid + "&&" + timing_cut;
-string expandedMom = "ue.nhits<0&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid; //Expanded momentum window cut
-
+string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
+string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
+string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
+//string timing_cut = "de.t0>700 && de.t0<1695"; // This is the standard window
+string timing_cut = "de.t0>700 && de.t0<1600"; //Use 1600 to avoid edge effects on DBY plots
+string all_cuts_MDC = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+string signalCuts = all_cuts_MDC + "&&" + trk_cut_pid + "&&" + timing_cut;
+string noMom = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid + "&&" + timing_cut; 
 
 //Alternative cuts
 string d0is0 = "demcent.d0==0";
-string noMomNoPID = trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string testCut = "ue.nhits<0&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R;
+string noMomNoPID = trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+string testCut = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R;
+
 
 /*********************************************************************************************************************************************************/
 ///////////////////////////////////////////////////    Define Standard Histograms & Graphs    /////////////////////////////////////////////////////////////
@@ -69,8 +68,9 @@ TH2F *h_det0_vs_CRVtimeWindowStart;
 TH2F *h_det0_vs_crvinfomc_time;
 TH1F *h_delta_det0_CRVtimeWindowStart;
 TH1F *h_delta_det0_crvinfomc_time;
-TH1F *h_cos_theta;
+TH1F *h_pz_p;
 TH1F *h_noCRV_demc_pdg;
+TH2F *h_pzp_vs_pitch;
 
 TGraph *g_crvinfomc_z0_vs_x0; 
 TGraph *g_crvinfomc_z0_vs_y0;
@@ -110,27 +110,27 @@ void initializeHists(bool makeCuts)
   //Primary Particle
   //crvinfomc._primaryX - x position of the primary particle
   if (makeCuts)
-    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -50, 50);
+    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -80, 80);
   else
-    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -60, 60);
+    h_crvinfomc_primaryX = new TH1F("crvinfomc_primaryX", "crvinfomc._primaryX", 100, -80, 80);
   h_crvinfomc_primaryX->SetXTitle("x (m)");
 
   //crvinfomc._primaryY - y position of the primary particle
   if (makeCuts)
-    h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15.365, 15.366);
+    h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15.364, 15.410);
   else
-    h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15.350, 15.450);
+    h_crvinfomc_primaryY = new TH1F("crvinfomc_primaryY", "crvinfomc._primaryY", 100, 15.364, 15.410);
   h_crvinfomc_primaryY->SetXTitle("y (m)");
 
   //crvinfomc._primaryZ - z position of the primary particle
   if (makeCuts)
-    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -40, 40);
+    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -80, 80);
   else
-    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -100, 100);
+    h_crvinfomc_primaryZ = new TH1F("crvinfomc_primaryZ", "crvinfomc._primaryZ", 100, -80, 80);
   h_crvinfomc_primaryZ->SetXTitle("z (m)");
 
   //cvinfomc._primaryZ:crvinfomc._primaryX - z vs x position of the primary
-  h_crvinfomc_primaryZ_vs_X = new TH2F("h_crvinfomc_primaryZ_vs_X", "crvinfomc._primaryZ vs crvinfomc._primaryX", 100, -15, 15, 100, -15, 15);
+  h_crvinfomc_primaryZ_vs_X = new TH2F("h_crvinfomc_primaryZ_vs_X", "crvinfomc._primaryZ vs crvinfomc._primaryX", 100, -80, 80, 100, -80, 80);
   h_crvinfomc_primaryZ_vs_X->SetXTitle("z (m)");
   h_crvinfomc_primaryZ_vs_X->SetYTitle("x (m)");
   h_crvinfomc_primaryZ_vs_X->SetStats(false);
@@ -211,13 +211,19 @@ void initializeHists(bool makeCuts)
   h_delta_det0_crvinfomc_time->SetXTitle("Time Delta (ns)");
 
   //Otherplots
-  //demcpri.momz / sqrt(demcpri.momx^2 + demcpri.momy^2 + demcpri.momz^2) - p_z/p = cos(theta)
-  h_cos_theta = new TH1F("h_cos_theta","p_z / p", 100, -1, 1);
-  h_cos_theta->SetXTitle("cos(#theta)");
+  //demcpri.momz / sqrt(demcpri.momx^2 + demcpri.momy^2 + demcpri.momz^2) - p_z/p
+  h_pz_p = new TH1F("h_pz_p","p_z / p", 100, -1, 1);
+  h_pz_p->SetXTitle("p_z / p");
 
   //PDG ID of events with no CRV coincidences
   h_noCRV_demc_pdg = new TH1F("h_noCRV_demc_pdg", "PDG ID of Particles Producing Events with no CRV Coincidences", 100, -300, 2300);
   h_noCRV_demc_pdg->SetXTitle("PDG ID");
+
+  //tan(p_z/p) vs pitch angle
+  h_pzp_vs_pitch = new TH2F("h_pzp_vs_pitch", "p_z / p : deent.td", 100, 0, 2, 100, -800, 800);
+  h_pzp_vs_pitch->SetXTitle("Pitch Angle");
+  h_pzp_vs_pitch->SetYTitle("tan(p_z / p)");
+  h_pzp_vs_pitch->SetStats(false);
 
 }
 
@@ -248,7 +254,7 @@ void deleteHists()
   h_det0_vs_crvinfomc_time->Delete();
   h_delta_det0_CRVtimeWindowStart->Delete();
   h_delta_det0_crvinfomc_time->Delete();
-  h_cos_theta->Delete();
+  h_pz_p->Delete();
   h_noCRV_demc_pdg->Delete();
 
   g_crvinfomc_z0_vs_x0->Delete(); 
@@ -256,7 +262,6 @@ void deleteHists()
   g_crvinfomc_primaryZ_vs_X->Delete();
   g_det0_vs_CRVtimeWindowStart->Delete();
   g_det0_vs_crvinfomc_time->Delete();
-  g_cos_theta_vs_pitch->Delete();
 
 }
 
@@ -264,10 +269,9 @@ void deleteHists()
 /*********************************************************************************************************************************************************/
 ///////////////////////////////////////////////////    Make Standardized Plots    /////////////////////////////////////////////////////////////////////////
 
-//Plot all standardized histograms
-void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts, bool scan = false)
+//Produce and save plots of each histogram
+void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool scan = false)
 {
-  
 
   //Set up canvases
   TCanvas *canv = new TCanvas("canv", "CRY Plots", 800, 600);
@@ -281,19 +285,20 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
     tree = (TTree*) inFile.Get("TrkAnaNeg/trkana");
   else
     tree = (TTree*) inFile.Get("TrkAnaPos/trkana");
-
+  
+  if (tree == NULL)
+    {
+      cout << "Tree cannot be found/read. Check the filepath" << endl;
+      exit(2);
+    }
+  
   //Choose which cuts to use
   TCut cuts;
   string cutIdentifier;
   if (makeCuts)
-    {
-      if (mixed)
-	cuts = TCut(all_cuts_MDC_pid_mixed.c_str());
-      else
-       	cuts = TCut(all_cuts_MDC_pid.c_str());
-  
-      // cuts = TCut(expandedMom.c_str());
-
+    {     
+      cuts = TCut(signalCuts.c_str());
+      //cuts = TCut(noMom.c_str());
       cutIdentifier = "_cut";
     }
   else
@@ -303,6 +308,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
     }
 
 
+  //Print out some information about the PDG of events 
   if (scan)
     {
       cout << "Events which were not produced by a muon that did not produce coincidences in the CRV" << endl;
@@ -323,7 +329,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
 
       cout <<"\n" << endl;
     }
-  else
+  else 
     {
       cout << "\n" << endl;
       cout << "Number of mu- events = " << tree->GetEntries(cuts + "demc.pdg==13")  << endl;
@@ -333,7 +339,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
       cout << "Other events:" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "abs(demc.pdg)>211","");
       cout << "Events which were not produced by a muon that did not produce coincidences in the CRV:" << endl;
-      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg:demc.pdg",cuts +  "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg:demc.pdg:deent.mom",cuts +  "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
       cout << "\n" << endl;  
     }
 
@@ -413,9 +419,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
   h_crvinfomc_primaryX->SetTitle("crvinfomc._primaryX");
   h_crvinfomc_primaryX->SetXTitle("Primary Particle x Pos at Gen Plane (m)");
   if (makeCuts)
-    h_crvinfomc_primaryX->SetBins(100, -5, 5);
+    h_crvinfomc_primaryX->SetBins(100, -80, 80);
   else
-    h_crvinfomc_primaryX->SetBins(100, -27.5, -25.5); 
+    h_crvinfomc_primaryX->SetBins(100, -80, 80); 
   h_crvinfomc_primaryX->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryX" + cutIdentifier + filetype).c_str());
   logCanv->cd();
@@ -428,9 +434,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
   h_crvinfomc_primaryY->SetTitle("crvinfomc._primaryY");
   h_crvinfomc_primaryY->SetXTitle("Primary Particle y Pos at Gen Plane (m)");
   if (makeCuts)
-    h_crvinfomc_primaryY->SetBins(25, 15.364, 15.367);
+    h_crvinfomc_primaryY->SetBins(100, 15.364, 15.410);
   else
-  h_crvinfomc_primaryY->SetBins(50, 15.365, 15.41); 
+  h_crvinfomc_primaryY->SetBins(100, 15.364, 15.410); 
   canv->cd();
   h_crvinfomc_primaryY->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryY" + cutIdentifier + filetype).c_str());
@@ -444,9 +450,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
   h_crvinfomc_primaryZ->SetTitle("crvinfomc._primaryZ");
   h_crvinfomc_primaryZ->SetXTitle("Primary Particle z Pos at Gen Plane (m)");
   if (makeCuts)
-    h_crvinfomc_primaryZ->SetBins(100, -4, 15);
+    h_crvinfomc_primaryZ->SetBins(100, -80, 80);
   else
-    h_crvinfomc_primaryZ->SetBins(100, 6.1, 6.7); 
+    h_crvinfomc_primaryZ->SetBins(100, -80,80); 
   canv->cd();
   h_crvinfomc_primaryZ->Draw();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ" + cutIdentifier + filetype).c_str());
@@ -455,12 +461,12 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
   logCanv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_logY" + cutIdentifier + filetype).c_str());
 
   //cvinfomc._primaryZ:crvinfomc._primaryX
-  tree->Draw("crvinfomc._primaryX/10000:crvinfomc._primaryZ/10000>>+h_crvinfomc_primaryZ_vs_X",cuts, "goff");
+  tree->Draw("crvinfomc._primaryX/1000:crvinfomc._primaryZ/1000>>+h_crvinfomc_primaryZ_vs_X",cuts, "goff");
   canv->cd();
   h_crvinfomc_primaryZ_vs_X->Draw("colz");
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X" + cutIdentifier + filetype).c_str());
 
-  tree->Draw("crvinfomc._primaryX/1000:crvinfomc._primaryZ/1000>>+g_crvinfomc_primaryZ_vs_X",cuts, "goff");
+  tree->Draw("crvinfomc._primaryX:crvinfomc._primaryZ>>+g_crvinfomc_primaryZ_vs_X",cuts, "goff");
   g_crvinfomc_primaryZ_vs_X = (TGraph*) gDirectory->Get("g_crvinfomc_primaryZ_vs_X");
   g_crvinfomc_primaryZ_vs_X->SetTitle("crvinfomc._primaryZ:crvinfomc._primaryX;z (m); x (m)");
   canv->cd();
@@ -594,14 +600,14 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
   logCanv->SaveAs(("standardizedPlots/delta_det0_crvinfomc_time_logY" + cutIdentifier + filetype).c_str());
 
   //cos(theta) = p_z / p
-  tree->Draw("demcpri.momz / sqrt((demcpri.momx * demcpri.momx)+(demcpri.momy * demcpri.momy)+(demcpri.momz * demcpri.momz)) >>+h_cos_theta",cuts, "goff");
-  h_cos_theta = (TH1F*) gDirectory->Get("h_cos_theta");
+  tree->Draw("demcpri.momz / sqrt((demcpri.momx * demcpri.momx)+(demcpri.momy * demcpri.momy)+(demcpri.momz * demcpri.momz)) >>+h_pz_p",cuts, "goff");
+  h_pz_p = (TH1F*) gDirectory->Get("h_pz_p");
   canv->cd();
-  h_cos_theta->Draw();
-  canv->SaveAs(("standardizedPlots/cos_theta" + cutIdentifier + filetype).c_str());
+  h_pz_p->Draw();
+  canv->SaveAs(("standardizedPlots/pz_p" + cutIdentifier + filetype).c_str());
   logCanv->cd();
-  h_cos_theta->Draw();
-  logCanv->SaveAs(("standardizedPlots/cos_theta_logY" + cutIdentifier + filetype).c_str());
+  h_pz_p->Draw();
+  logCanv->SaveAs(("standardizedPlots/pz_p_logY" + cutIdentifier + filetype).c_str());
 
   //demc.pdg of events with no CRV coincidences
   TCut noCRVcoincidences = "@crvinfo.size()<1";
@@ -614,14 +620,15 @@ void makeStandardizedPlots(string treePath, bool neg, bool mixed, bool makeCuts,
   h_noCRV_demc_pdg->Draw();
   logCanv->SaveAs(("standardizedPlots/noCRV_demc_pdg_logY" + cutIdentifier + filetype).c_str());
 
+  
   //cos(theta) = p_z / p
-  tree->Draw("(demcpri.momz / sqrt((demcpri.momx * demcpri.momx)+(demcpri.momy * demcpri.momy)+(demcpri.momz * demcpri.momz))):tan(deent.td) >>+g_cos_theta_vs_pitch",cuts, "goff");
-  g_cos_theta_vs_pitch = (TGraph*) gDirectory->Get("g_cos_theta_vs_pitch");
-  g_cos_theta_vs_pitch->SetTitle("cos(#theta):deent.td;tan(Pitch Angle);cos(#theta)");
+  tree->Draw("tan(acos(demcpri.momz / sqrt((demcpri.momx * demcpri.momx)+(demcpri.momy * demcpri.momy)+(demcpri.momz * demcpri.momz)))):deent.td >>+h_pzp_vs_pitch", cuts, "goff");
+  h_pzp_vs_pitch = (TH2F*) gDirectory->Get("h_pzp_vs_pitch");
   canv->cd();
-  g_cos_theta_vs_pitch->Draw();
-  canv->SaveAs(("standardizedPlots/cos_theta_vs_pitch" + cutIdentifier + filetype).c_str());
+  h_pzp_vs_pitch->Draw("colz");
+  canv->SaveAs(("standardizedPlots/pzp_vs_pitch" + cutIdentifier + filetype).c_str());
 
+ 
   //Clean up
   canv->Close();
   logCanv->Close();
