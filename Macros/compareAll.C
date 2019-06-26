@@ -265,8 +265,8 @@ void defHistParams()
   hist_params.push_back(params_delta_det0_CRVtimeWindowStart);
 
   histParams params_pz_p;
-  params_pz_p.title = "p_z / p";
-  params_pz_p.xTitle = "p_z / p";
+  params_pz_p.title = "p_z / p = cos(#theta)";
+  params_pz_p.xTitle = "cos(#theta)";
   params_pz_p.xMins[0] = -1; //No cuts params
   params_pz_p.xMaxs[0] = 1;
   params_pz_p.nBins[0] = 100;
@@ -369,7 +369,7 @@ void compareAll()
 	  TH1F *hCRY2 = new TH1F("hCRY2", params.title.c_str(), params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);;
 	  TH1F *hDBY = new TH1F("hDBY", params.title.c_str(), params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
 
-	  if (params.title == "p_z / p") //Title of this hist is not the expression for which to fill it so it must be treated as a special case
+	  if (params.title == "p_z / p = cos(#theta)") //Title of this hist is not the expression for which to fill it so it must be treated as a special case
 	    {
 	      tree_cry1->Draw(Form("%s>>+hCRY1","demcpri.momz/sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))"),cuts[cutN].c_str(),"goff");
 	      tree_cry2->Draw(Form("%s>>+hCRY2","demcpri.momz/sqrt((demcpri.momx*demcpri.momx)+(demcpri.momy*demcpri.momy)+(demcpri.momz*demcpri.momz))"),cuts[cutN].c_str(),"goff");
@@ -458,7 +458,7 @@ void compareAll()
 		plot_name += "_";
 	    }
 
-	  if (params.title == "p_z / p")
+	  if (params.title == "p_z / p = cos(#theta)")
 	    plot_name = "comp_pz_p";
 
 	  if (cutN > 0)
