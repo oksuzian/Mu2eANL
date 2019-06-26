@@ -70,14 +70,14 @@ TH1F *h_delta_det0_CRVtimeWindowStart;
 TH1F *h_delta_det0_crvinfomc_time;
 TH1F *h_pz_p;
 TH1F *h_noCRV_demc_pdg;
-TH2F *h_pzp_vs_pitch;
+TH2F *h_theta_vs_tandip;
 
 TGraph *g_crvinfomc_z0_vs_x0; 
 TGraph *g_crvinfomc_z0_vs_y0;
 TGraph *g_crvinfomc_primaryZ_vs_X;
 TGraph *g_det0_vs_CRVtimeWindowStart;
 TGraph *g_det0_vs_crvinfomc_time;
-TGraph *g_cos_theta_vs_pitch;
+TGraph *g_cos_theta_vs_tandip;
 
 
 void initializeHists(bool makeCuts)
@@ -213,17 +213,17 @@ void initializeHists(bool makeCuts)
   //Otherplots
   //demcpri.momz / sqrt(demcpri.momx^2 + demcpri.momy^2 + demcpri.momz^2) - p_z/p
   h_pz_p = new TH1F("h_pz_p","p_z / p", 100, -1, 1);
-  h_pz_p->SetXTitle("p_z / p");
+  h_pz_p->SetXTitle("cos(#theta)");
 
   //PDG ID of events with no CRV coincidences
   h_noCRV_demc_pdg = new TH1F("h_noCRV_demc_pdg", "PDG ID of Particles Producing Events with no CRV Coincidences", 100, -300, 2300);
   h_noCRV_demc_pdg->SetXTitle("PDG ID");
 
-  //tan(p_z/p) vs pitch angle
-  h_pzp_vs_pitch = new TH2F("h_pzp_vs_pitch", "p_z / p : deent.td", 100, 0, 2, 100, -800, 800);
-  h_pzp_vs_pitch->SetXTitle("Pitch Angle");
-  h_pzp_vs_pitch->SetYTitle("tan(p_z / p)");
-  h_pzp_vs_pitch->SetStats(false);
+  //Theta vs Tan Dip
+  h_theta_vs_tandip = new TH2F("h_theta_vs_tandip", "arccos(p_z / p) : deent.td", 100, 0, 2.5, 100, 0, 180); //y limits -0.5-3.5
+  h_theta_vs_tandip->SetXTitle("Tan Dip");
+  h_theta_vs_tandip->SetYTitle("#theta (#circ)");
+  h_theta_vs_tandip->SetStats(false);
 
 }
 
@@ -604,10 +604,10 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool scan =
   h_pz_p = (TH1F*) gDirectory->Get("h_pz_p");
   canv->cd();
   h_pz_p->Draw();
-  canv->SaveAs(("standardizedPlots/pz_p" + cutIdentifier + filetype).c_str());
+  canv->SaveAs(("standardizedPlots/cos_theta" + cutIdentifier + filetype).c_str());
   logCanv->cd();
   h_pz_p->Draw();
-  logCanv->SaveAs(("standardizedPlots/pz_p_logY" + cutIdentifier + filetype).c_str());
+  logCanv->SaveAs(("standardizedPlots/cos_theta_logY" + cutIdentifier + filetype).c_str());
 
   //demc.pdg of events with no CRV coincidences
   TCut noCRVcoincidences = "@crvinfo.size()<1";
@@ -622,11 +622,11 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool scan =
 
   
   //cos(theta) = p_z / p
-  tree->Draw("tan(acos(demcpri.momz / sqrt((demcpri.momx * demcpri.momx)+(demcpri.momy * demcpri.momy)+(demcpri.momz * demcpri.momz)))):deent.td >>+h_pzp_vs_pitch", cuts, "goff");
-  h_pzp_vs_pitch = (TH2F*) gDirectory->Get("h_pzp_vs_pitch");
+  tree->Draw("360.0/6.2832*acos(demcpri.momz / sqrt((demcpri.momx * demcpri.momx)+(demcpri.momy * demcpri.momy)+(demcpri.momz * demcpri.momz))):deent.td >>+h_theta_vs_tandip", cuts, "goff");
+  h_theta_vs_tandip = (TH2F*) gDirectory->Get("h_theta_vs_tandip");
   canv->cd();
-  h_pzp_vs_pitch->Draw("colz");
-  canv->SaveAs(("standardizedPlots/pzp_vs_pitch" + cutIdentifier + filetype).c_str());
+  h_theta_vs_tandip->Draw("colz");
+  canv->SaveAs(("standardizedPlots/theta_vs_tandip" + cutIdentifier + filetype).c_str());
 
  
   //Clean up
