@@ -28,7 +28,7 @@
 string momentum_cut = "deent.mom>100 && deent.mom<110"; //Use wider momentum window than experimental signal window
 string no_upstream = "ue.status<0";
 string trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
-string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
+string trk_cut_pid = "dequal.TrkPIDDeM>0.9";
 string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
 string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
 string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
@@ -41,8 +41,8 @@ string noMom = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_t
 //Alternative cuts
 string d0is0 = "demcent.d0==0";
 string noMomNoPID = trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string testCut = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R;
-
+string testCut = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + trk_cut_pid + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + timing_cut; 
+string testCut2 = noMom;
 
 /*********************************************************************************************************************************************************/
 ///////////////////////////////////////////////////    Define Standard Histograms & Graphs    /////////////////////////////////////////////////////////////
@@ -71,6 +71,7 @@ TH1F *h_delta_det0_crvinfomc_time;
 TH1F *h_pz_p;
 TH1F *h_noCRV_demc_pdg;
 TH2F *h_theta_vs_tandip;
+TH2F *h_delta_t_vs_z;
 
 TGraph *g_crvinfomc_z0_vs_x0; 
 TGraph *g_crvinfomc_z0_vs_y0;
@@ -225,6 +226,12 @@ void initializeHists(bool makeCuts)
   h_theta_vs_tandip->SetYTitle("#theta (#circ)");
   h_theta_vs_tandip->SetStats(false);
 
+  //Delta t vs z at crv
+  h_delta_t_vs_z = new TH2F("h_delta_t_vs_z", "de.t0 - crvinfo._timeWindowStart : z", 100, -3, 19, 100, -100, 150);
+  h_delta_t_vs_z->SetXTitle("MC Truth z at CRV (m)");
+  h_delta_t_vs_z->SetYTitle("Time Delta (ns)");
+  h_delta_t_vs_z->SetStats(false);
+
 }
 
 
@@ -256,12 +263,14 @@ void deleteHists()
   h_delta_det0_crvinfomc_time->Delete();
   h_pz_p->Delete();
   h_noCRV_demc_pdg->Delete();
+  h_delta_t_vs_z->Delete();
 
   g_crvinfomc_z0_vs_x0->Delete(); 
   g_crvinfomc_z0_vs_y0->Delete();
   g_crvinfomc_primaryZ_vs_X->Delete();
   g_det0_vs_CRVtimeWindowStart->Delete();
   g_det0_vs_crvinfomc_time->Delete();
+  
 
 }
 
@@ -270,7 +279,7 @@ void deleteHists()
 ///////////////////////////////////////////////////    Make Standardized Plots    /////////////////////////////////////////////////////////////////////////
 
 //Produce and save plots of each histogram
-void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool scan = false)
+void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMomCut = true, bool scan = false)
 {
 
   //Set up canvases
@@ -297,8 +306,14 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool scan =
   string cutIdentifier;
   if (makeCuts)
     {     
-      cuts = TCut(signalCuts.c_str());
-      //cuts = TCut(noMom.c_str());
+      if (useMomCut)
+	cuts = TCut(signalCuts.c_str());
+      else
+	cuts = TCut(noMom.c_str());
+
+      //cuts = TCut(testCut.c_str());////////////////////////////////////////////
+      // cuts = TCut(testCut2.c_str());
+      
       cutIdentifier = "_cut";
     }
   else
@@ -332,16 +347,34 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool scan =
   else 
     {
       cout << "\n" << endl;
-      cout << "Number of mu- events = " << tree->GetEntries(cuts + "demc.pdg==13")  << endl;
-      cout << "Number of mu+ events = " << tree->GetEntries(cuts + "demc.pdg==-13")  << endl;
       cout << "Number of e- events = " << tree->GetEntries(cuts + "demc.pdg==11")  << endl;
       cout << "Number of e+ events = " << tree->GetEntries(cuts + "demc.pdg==-11")  << endl;
+      cout << "Number of mu- events = " << tree->GetEntries(cuts + "demc.pdg==13")  << endl;
+      cout << "Number of mu+ events = " << tree->GetEntries(cuts + "demc.pdg==-13")  << endl;
+     
       cout << "Other events:" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "abs(demc.pdg)>211","");
       cout << "Events which were not produced by a muon that did not produce coincidences in the CRV:" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg:demc.pdg:deent.mom",cuts +  "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
       cout << "\n" << endl;  
     }
+
+  if (makeCuts)
+    {
+      cout << "Non-electron reconstructed events: " << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "demc.pdg!=11","");
+      
+    }
+
+  /////// Other scans
+  // cout << "Events in the delta t tail:" << endl;
+  // tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg:(de.t0 - crvinfo._timeWindowStart):ue.nHits",cuts + "(de.t0 - crvinfo._timeWindowStart)>40","");
+  // cout << "Events with t0 < 800 ns:" << endl;
+  // tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg:de.t0",cuts + "de.t0<800","");
+  // cout << "Events in lower cluster of delta t vs z plot" << endl;
+  //tree->Scan("evtinfo.subrunid:evtinfo.eventid:(de.t0 - crvinfo._timeWindowStart):crvinfomc._z[0]:demc.pdg:demcgen.pdg",cuts +"(de.t0 - crvinfo._timeWindowStart)<0&&crvinfomc._z[0]/1000>12","");
+  // cout << "Events in upper cluster of delta t vs z plot" << endl;
+  //tree->Scan("evtinfo.subrunid:evtinfo.eventid:(de.t0 - crvinfo._timeWindowStart):crvinfomc._z[0]:demc.pdg:demcgen.pdg",cuts + "(de.t0 - crvinfo._timeWindowStart)>30&&crvinfomc._z[0]/1000>12","");
 
   //Initialize the histograms
   initializeHists(makeCuts);
@@ -628,6 +661,13 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool scan =
   h_theta_vs_tandip->Draw("colz");
   canv->SaveAs(("standardizedPlots/theta_vs_tandip" + cutIdentifier + filetype).c_str());
 
+
+  // h_delta_t_vs_z
+  tree->Draw("(de.t0 - crvinfo._timeWindowStart):crvinfomc._z[0]/1000 >>+h_delta_t_vs_z", cuts, "goff");
+  h_delta_t_vs_z = (TH2F*) gDirectory->Get("h_delta_t_vs_z");
+  canv->cd();
+  h_delta_t_vs_z->Draw("colz");
+  canv->SaveAs(("standardizedPlots/deltat_vs_z" + cutIdentifier + filetype).c_str());
  
   //Clean up
   canv->Close();
