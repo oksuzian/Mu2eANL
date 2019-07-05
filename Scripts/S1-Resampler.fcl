@@ -104,3 +104,8 @@ physics.detPath: [ "genCounter", "dsRegionResample",
 services.TFileService.fileName: "nts.owner.dsregion-resampled.version.sequencer.root"
 outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.sequencer.art"
 
+//Specify Mu2e geometry
+services.GeometryService.simulatedDetector.tool_type : "Mu2e"
+
+
+physics.filters.dsRegionResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beams1_0619/20190612-182432/out/00/00000/sim.mu2e.beam-g4s1-dsregion.0619.002701_00000643.art"]
