@@ -1,0 +1,106 @@
+// Re-sample dsregion stream particles from stage-1 outputs
+// Ben Barton, 2019
+// based off JobConfig/beam/DS-flash.fcl by
+// Andrei Gaponenko, 2018
+
+#include "JobConfig/beam/prolog.fcl"
+
+process_name: dsRegionResampling
+
+//source: { module_type : EmptyEvent }
+services: { @table::mu2e.services.simServices }
+physics: { @table::mu2e.physics.g4s4Flash } // Does this need to be changed ???
+outputs: { @table::mu2e.outputs.g4s4Defs }
+
+//----------------------------------------------------------------
+// Mofidy setup for resampling the dsregion from s1 outputs
+
+physics.trigger_paths: [ detPath ] ///////////////Add CRV in here too?
+physics.out: [ detectorOutput ] //////////////// What outputs do we need?
+
+// We should run genCounter for all EmptyEvent jobs.
+physics.producers.genCounter: {module_type: GenEventCounter }
+
+// Bring in info from the previous stage
+physics.filters.dsRegionResample: {
+   module_type: ResamplingMixer
+   fileNames: @nil  
+   readMode: "sequential"
+   wrapFiles: true
+   mu2e: {
+      products: {
+	 genParticleMixer: { mixingMap: [ [ "generate", "" ] ] }
+	 simParticleMixer: { mixingMap: [ [ "dsRegionFilter", "" ] ] } 
+	 stepPointMCMixer: { mixingMap: [ [ "dsRegionFilter:dsregion", "dsRegionFilter:virtualdetector", ":" ] ]}
+      }
+   }
+}
+
+// Point Mu2eG4 to the pre-simulated data
+physics.producers.g4run.MultiStageParameters: {
+   simParticleNumberOffset: 300000 ///?????????????????????????????
+   genInputHits:  [ "dsregionResample:dsregion" ]
+   inputSimParticles: "dsregionResample"
+   inputMCTrajectories: ""
+   inputPhysVolumeMultiInfo: "" 
+}
+physics.producers.g4run.SDConfig.preSimulatedHits:  ["dsRegionResample:virtualdetector"]
+
+
+physics.filters.dsPrefilter: {
+   module_type: FilterG4Out
+   noInstanceName : true
+   mainHitInputs: [ "g4run:tracker", "g4run:calorimeter", "g4run:calorimeterRO", "g4run:CRV" ]
+   extraHitInputs: [ "g4run:virtualdetector", "g4run:protonabsorber" ]
+   numSimParticleCollections: 1
+}
+
+
+
+//----------------------------------------------------------------
+// Fix shower compressor config
+physics.producers.CaloShowerStepFromStepPt.physVolInfoInput: g4run
+physics.producers.CaloShowerStepFromStepPt.usePhysVolInfo: true
+physics.producers.CaloShowerStepFromStepPt.calorimeterStepPoints: "dsPrefilter:calorimeter" 
+physics.producers.CaloShowerStepFromStepPt.calorimeterROStepPoints: "dsPrefilter:calorimeterRO" 
+// The module needs to stop using getMany() and accept InputTags for configuration.
+// Until it is fixed, we have to use a hacked version.
+physics.producers.CaloShowerStepFromStepPt.module_type: CaloShowerStepFromStepPtHACKED
+
+
+//----------------------------------------------------------------
+// The final filter
+physics.filters.detectorFilter: {
+   module_type: "FilterG4Out"
+   noInstanceName: true
+   numSimParticleCollections: 1
+   mainHitInputs: [
+      "dsPrefilter:tracker" , "dsPrefilter:CRV"
+   ]
+   mainSPPtrInputs: [
+      "CaloShowerStepFromStepPt"
+   ]
+   extraHitInputs: [
+      "ds:virtualdetector",
+      "ds:protonabsorber" 
+   ]
+}
+
+// Add genCounter and dsRegionResample to the trigger path.
+physics.detPath: [ "genCounter", "dsRegionResample", 
+   //need to remove compressPVDetector//  @sequence::physics.detPath
+   "g4run",
+   "g4consistent",
+   "dsPrefilter", # Filters out stuff not hitting tracker, calo, or CRV
+
+   "CaloShowerStepFromStepPt",
+   "detectorFilter", # filters out particles in calo showers
+
+   "CaloShowerCrystalSteps",
+   "CaloShowerROSteps"
+]
+
+// Set output file names
+services.TFileService.fileName: "nts.owner.dsregion-resampled.version.sequencer.root"
+outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.sequencer.art"
+
