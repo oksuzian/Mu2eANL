@@ -12,11 +12,22 @@ services: { @table::mu2e.services.simServices }
 physics: { @table::mu2e.physics.g4s4Flash } // Does this need to be changed ???
 outputs: { @table::mu2e.outputs.g4s4Defs }
 
+//Specify Mu2e geometry
+services.GeometryService.simulatedDetector.tool_type : "Mu2e"
+
+// Set output file names
+services.TFileService.fileName: "nts.owner.dsregion-resampled.version.sequencer.root"
+outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.sequencer.art"
+
+
+
+
 //----------------------------------------------------------------
 // Mofidy setup for resampling the dsregion from s1 outputs
 
 physics.trigger_paths: [ detPath ] ///////////////Add CRV in here too?
 physics.out: [ detectorOutput ] //////////////// What outputs do we need?
+
 
 // We should run genCounter for all EmptyEvent jobs.
 physics.producers.genCounter: {module_type: GenEventCounter }
@@ -31,6 +42,7 @@ physics.filters.dsRegionResample: {
       products: {
 	 genParticleMixer: { mixingMap: [ [ "generate", "" ] ] }
 	 simParticleMixer: { mixingMap: [ [ "dsRegionFilter", "" ] ] } 
+	# stepPointMCMixer: { mixingMap: [ [ "dsRegionFilter:dsregion", "dsRegionFilter:virtualdetector", ":" ] ]}
 	 stepPointMCMixer: { mixingMap: [
 	       [ "dsRegionFilter:virtualdetector", ":" ],
 	       [ "dsRegionFilter:dsregion", ":" ]
@@ -38,6 +50,7 @@ physics.filters.dsRegionResample: {
       }
    }
 }
+
 
 // Point Mu2eG4 to the pre-simulated data
 physics.producers.g4run.MultiStageParameters: {
@@ -58,10 +71,6 @@ physics.filters.dsPrefilter: {
    numSimParticleCollections: 1
 }
 
-
-
-//----------------------------------------------------------------
-// Fix shower compressor config
 physics.producers.CaloShowerStepFromStepPt.physVolInfoInput: g4run
 physics.producers.CaloShowerStepFromStepPt.usePhysVolInfo: true
 physics.producers.CaloShowerStepFromStepPt.calorimeterStepPoints: "dsPrefilter:calorimeter" 
@@ -71,7 +80,7 @@ physics.producers.CaloShowerStepFromStepPt.calorimeterROStepPoints: "dsPrefilter
 physics.producers.CaloShowerStepFromStepPt.module_type: CaloShowerStepFromStepPtHACKED
 
 
-//----------------------------------------------------------------
+
 // The final filter
 physics.filters.detectorFilter: {
    module_type: "FilterG4Out"
@@ -94,6 +103,7 @@ physics.detPath: [ "genCounter", "dsRegionResample",
    //need to remove compressPVDetector//  @sequence::physics.detPath
    "g4run",
    "g4consistent",
+
    "dsPrefilter", # Filters out stuff not hitting tracker, calo, or CRV
 
    "CaloShowerStepFromStepPt",
@@ -102,13 +112,6 @@ physics.detPath: [ "genCounter", "dsRegionResample",
    "CaloShowerCrystalSteps",
    "CaloShowerROSteps"
 ]
-
-// Set output file names
-services.TFileService.fileName: "nts.owner.dsregion-resampled.version.sequencer.root"
-outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.sequencer.art"
-
-//Specify Mu2e geometry
-services.GeometryService.simulatedDetector.tool_type : "Mu2e"
 
 
 physics.filters.dsRegionResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beams1_0619/20190612-182432/out/00/00000/sim.mu2e.beam-g4s1-dsregion.0619.002701_00000643.art"]
