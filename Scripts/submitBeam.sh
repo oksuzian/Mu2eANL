@@ -8,22 +8,23 @@ setup dhtools
 
 MAINDIR=`pwd`
 MAKEFLC=0
-STAGE=s2
+STAGE=s3
 #MIXFILES="V703RegConc"
 MIXFILES="V703_07CB4"
 
 if [ "$STAGE" == "s2" ]; then
 #    INLIST=prestage/sim.mu2e.cd3-beam-g4s1-dsregion.051017.txt
 #    INLIST=prestage/sim.oksuzian.mu2eII-beam.g4s1-dsregion.txt
-    INLIST=submissionLists/beams1_0619_dsregion_filelist_testBatch.txt
+    INLIST=submissionLists/beams1_0619_dsregion_filelist.txt
   #  INFCL=/mu2e/app/users/oksuzian/Offlinev7_0_3/prestage/beam_g4s2_crv.fcl
     INFCL=../oksuzian/Offlinev7_0_3/prestage/beam_g4s2_crv.fcl
-    TAG=1907051332
+    TAG=1907061035
 elif [ "$STAGE" == "s3" ]; then
-    INLIST=prestage/sim.mu2e.cd3-beam-g4s1-mubeam.051017.txt
+    #INLIST=prestage/sim.mu2e.cd3-beam-g4s1-mubeam.051017.txt
+    INLIST=submissionLists/beam_0619_stage3_fileList.txt
 #    INLIST=prestage/sim.oksuzian.mu2eII-beam.g4s1-mubeam.txt
-    INFCL=prestage/beam_g4s3.fcl
-    TAG=181026152950
+    INFCL=../oksuzian/Offlinev7_0_3/prestage/beam_g4s3.fcl
+    TAG=1907081105
 elif [ "$STAGE" == "s4dio" ]; then
     INFCL=prestage/beam_g4s4_dio.fcl
     TAG=180713204829
