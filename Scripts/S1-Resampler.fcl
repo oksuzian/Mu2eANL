@@ -1,11 +1,11 @@
 // Re-sample dsregion stream particles from stage-1 outputs
 // Ben Barton, 2019
-// based off JobConfig/beam/DS-flash.fcl by
-// Andrei Gaponenko, 2018
+// based off JobConfig/beam/DS-flash.fcl by Andrei Gaponenko, 2018
 
 #include "JobConfig/beam/prolog.fcl"
 
 process_name: dsRegionResampling
+
 
 source: { module_type : EmptyEvent }
 services: { @table::mu2e.services.simServices }
@@ -96,12 +96,14 @@ physics.detPath: [ "genCounter", "dsRegionResample",
    "g4consistent",
    "dsPrefilter", # Filters out stuff not hitting tracker, calo, or CRV
 
+
    "CaloShowerStepFromStepPt",
    "detectorFilter", # filters out particles in calo showers
 
    "CaloShowerCrystalSteps",
    "CaloShowerROSteps"
 ]
+
 
 // Set output file names
 services.TFileService.fileName: "nts.owner.dsregion-resampled.version.sequencer.root"
@@ -111,4 +113,4 @@ outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.se
 services.GeometryService.simulatedDetector.tool_type : "Mu2e"
 
 
-physics.filters.dsRegionResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beams1_0619/20190612-182432/out/00/00000/sim.mu2e.beam-g4s1-dsregion.0619.002701_00000643.art"]
+physics.filters.dsRegionResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beams1_0619/20190612-182432/out/00/00000/sim.mu2e.beam-g4s1-dsregion.0619.002701_00000643.art","/pnfs/mu2e/persistent/users/bbarton/beams1_0619/20190612-182432/out/00/00001/sim.mu2e.beam-g4s1-dsregion.0619.002701_00000307.art","/pnfs/mu2e/persistent/users/bbarton/beams1_0619/20190612-182432/out/00/00002/sim.mu2e.beam-g4s1-dsregion.0619.002701_00000337.art"]
