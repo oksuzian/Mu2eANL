@@ -1,0 +1,82 @@
+// Filter K-longs and high energy neutrons from the output of stage-1 beam simulations 
+// Ben Barton
+// 07/2019
+
+
+#include "JobConfig/beam/prolog.fcl"
+
+process_name: extractNeutralsFromDSregion
+
+source: { 
+   module_type : EmptyEvent
+}
+
+services: { @table::mu2e.services.simServices }
+
+physics: { @table::mu2e.physics.g4s4Flash }
+
+outputs: { @table::mu2e.outputs.g4s4Defs }
+
+// Run genCounter for all EmptyEvent jobs.
+physics.producers.genCounter: {module_type: GenEventCounter }
+
+//Filter to read in data
+physics.filters.dsRegionReader: {
+   module_type: ResamplingMixer //Don't nead resampling but module handles reading in data
+   fileNames: @nil  
+   readMode: "sequential"
+   wrapFiles: true
+   mu2e: {
+      products: {
+	 genParticleMixer: { mixingMap: [ [ "generate", "" ] ] }
+	 simParticleMixer: { mixingMap: [ [ "dsRegionFilter", "" ] ] } 
+	 stepPointMCMixer: { mixingMap: [
+	       [ "dsRegionFilter:virtualdetector", ":" ],
+	       [ "dsRegionFilter:dsregion", ":" ]
+	    ] }
+      }
+   }
+}
+
+
+// Point Mu2eG4 to the pre-simulated data
+physics.producers.g4run.MultiStageParameters: {
+   simParticleNumberOffset: 300000 ////////////////////////////// ????
+   genInputHits:  [ "dsRegionReader:dsregion" ]
+   inputSimParticles: "dsRegionReader"
+   inputMCTrajectories: ""
+   inputPhysVolumeMultiInfo: "" 
+}
+physics.producers.g4run.SDConfig.preSimulatedHits:  ["dsRegionReader:virtualdetector"]
+
+
+// We want only K-longs and neutrons
+physics.filters.kLongsAndNeutronsFilter: {
+   module_type : FilterStepPointPDG 
+   inputs : ["g4run:dsregion"]
+   pdgToKeep : [130, 2112]   
+}	  	  
+
+
+// We only want neutrons above a certain energy
+physics.filters.minMomFilter: {
+   module_type : FilterStepPointMomentum
+   inputs : "kLongsAndNeutronsFilter"
+   cutMomentumMin : 10 
+}
+
+
+//Only want g4 basics and the two new filters above
+physics.detPath: ["genCounter", "dsRegionReader", "g4run", "g4consistent", "kLongsAndNeutronsFilter", "minMomFilter"]
+physics.trigger_paths: [detPath]
+physics.out: [ detectorOutput ]
+
+//Specify Mu2e geometry
+services.GeometryService.simulatedDetector.tool_type : "Mu2e"
+
+// Set output file names
+services.TFileService.fileName: "nts.owner.kLongsAndNeutrons.version.sequencer.root"
+outputs.detectorOutput.fileName: "sim.owner.kLongsAndNeutrons.version.sequencer.art"
+
+physics.filters.dsRegionReader.fileNames: [ "/pnfs/mu2e/persistent/users/bbarton/beams1_0619/20190626-233653/20190626-233653/out/00/00000/sim.mu2e.beam-g4s1-dsregion.0619.002701_00049346.art" ]
+
