@@ -9,14 +9,14 @@ process_name: dsRegionResampling
 
 source: { module_type : EmptyEvent }
 services: { @table::mu2e.services.simServices }
-physics: { @table::mu2e.physics.g4s4Flash } // Does this need to be changed ???
+physics: { @table::mu2e.physics.g4s4Flash } 
 outputs: { @table::mu2e.outputs.g4s4Defs }
 
 //----------------------------------------------------------------
 // Mofidy setup for resampling the dsregion from s1 outputs
 
-physics.trigger_paths: [ detPath ] ///////////////Add CRV in here too?
-physics.out: [ detectorOutput ] //////////////// What outputs do we need?
+physics.trigger_paths: [ detPath ]
+physics.out: [ detectorOutput ] 
 
 // We should run genCounter for all EmptyEvent jobs.
 physics.producers.genCounter: {module_type: GenEventCounter }
@@ -41,7 +41,7 @@ physics.filters.dsRegionResample: {
 
 // Point Mu2eG4 to the pre-simulated data
 physics.producers.g4run.MultiStageParameters: {
-   simParticleNumberOffset: 300000 ///?????????????????????????????
+   simParticleNumberOffset: 300000 
    genInputHits:  [ "dsRegionResample:dsregion" ]
    inputSimParticles: "dsRegionResample"
    inputMCTrajectories: ""
