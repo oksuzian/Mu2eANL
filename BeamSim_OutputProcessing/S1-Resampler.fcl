@@ -47,7 +47,20 @@ physics.producers.g4run.MultiStageParameters: {
    inputMCTrajectories: ""
    inputPhysVolumeMultiInfo: "" 
 }
+######### ?????????????????????
 physics.producers.g4run.SDConfig.preSimulatedHits:  ["dsRegionResample:virtualdetector"]
+
+
+
+## Resample only K-longs and high energy neutrons
+physics.producers.g4run.Mu2eG4SteppingOnlyCut: {
+   type: union
+   pars: [ { type: intersection 
+   	     pars: [{type: kineticEnergy cut: 100}, 
+	     	    {type: pdgId pars: [2112]}] },
+           { type: pdgId pars: [130] }  ]
+}
+
 
 
 physics.filters.dsPrefilter: {
