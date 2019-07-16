@@ -1,0 +1,102 @@
+// Filter K-longs and high energy neutrons from the output of stage-1 beam simulations 
+// Ben Barton
+// 07/2019
+
+
+#include "fcl/minimalMessageService.fcl"
+#include "fcl/standardProducers.fcl"
+#include "fcl/standardServices.fcl"
+#include "Mu2eG4/fcl/prolog.fcl"
+
+process_name :  neutralsFilter_v4
+
+source : {
+   module_type : RootInput
+}
+
+
+physics : {
+   producers: {
+      g4run : {
+         module_type: Mu2eG4
+         physics: @local::mu2eg4DefaultPhysics
+         ResourceLimits: @local::mu2eg4DefaultResourceLimits
+	 TrajectoryControl: @local::mu2eg4NoTrajectories
+         debug:  @local::mu2eg4DefaultDebug
+         visualization: @local::mu2eg4NoVisualization
+
+	 MultiStageParameters : {
+            simParticleNumberOffset: 100000 // safe b/c of g4.particlesSizeLimit in stage1
+            genInputHits: [ "dsRegionFilter:dsregion" ]
+            inputSimParticles: "dsRegionFilter"
+	    inputMCTrajectories: ""
+            inputPhysVolumeMultiInfo: ""
+	 }
+
+	  ## Want only K-longs and high energy neutrons
+	 Mu2eG4SteppingOnlyCut: {
+            type: union
+            pars: [ { type: intersection 
+   	              pars: [{type: kineticEnergy cut: 100}, 
+	     	             {type: pdgId pars: [2112]}] },
+                    { type: pdgId pars: [130] }  ]
+         }
+
+       	 Mu2eG4CommonCut: {
+	    type: constant
+            value: false
+	    write: DSVacuum
+        }
+
+      }
+   }
+
+   filters: {
+      g4status: {
+         module_type: FilterStatusG4
+         input: "g4run"
+	 maxAcceptedStatus: 1  #  status 10 and above means StepPointMCCollection may have non-dereferencable pointers
+      }
+
+      g4consistent: {
+         module_type: FilterStatusG4
+         input: "g4run"
+	 maxAcceptedStatus: 9  #  status 10 and above means StepPointMCCollection may have non-dereferencable pointers
+      }
+   }
+
+   g4StatusFilter : [g4run, "!g4status" ]
+
+   outputs: [truncatedEvtsOutput]
+   an: []
+   end_paths: [outputs]
+}
+
+outputs: {
+
+  truncatedEvtsOutput : {
+      module_type : RootOutput
+      SelectEvents: ["g4StatusFilter"]
+      outputCommands:   [ "drop *_*_*_*",
+         "keep mu2e::GenParticles_*_*_*",
+         "keep mu2e::GenEventCount_*_*_*",
+         "keep mu2e::StatusG4_*_*_*",
+         "keep *_g4run_*_*"
+      ]
+      fileName    : "sim.owner.beam-g4s2-kLongsandNeutrons.version.sequencer.art"
+   }
+
+}
+
+// Limit the amount of "Begin processing the ... record" messages
+services.message.destinations.log.categories.ArtReport.reportEvery : 1
+services.message.destinations.log.categories.ArtReport.limit : 1
+services.message.destinations.log.categories.ArtReport.timespan : 300
+
+
+//Add Mu2e geometry service identifier				      
+services.GeometryService.simulatedDetector.tool_type : "Mu2e"
+
+
+// /pnfs/mu2e/persistent/users/bbarton/beams1_0619/20190626-233653/20190626-233653/out/00/00000/sim.mu2e.beam-g4s1-dsregion.0619.002701_00049346.art
+
