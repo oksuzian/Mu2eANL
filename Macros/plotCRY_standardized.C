@@ -78,6 +78,9 @@ TH2F *h_theta_vs_tandip;
 TH2F *h_delta_t_vs_z;
 TH1F *h_demcgen_t0;
 TH1F *h_demcpri_t0;
+TH1F *h_delta_t_minus_demcpri_t0;
+TH1F *h_de_t0_minus_demcpri_t0;
+TH1F *h_neutronKE;
 
 TGraph *g_crvinfomc_z0_vs_x0; 
 TGraph *g_crvinfomc_z0_vs_y0;
@@ -257,6 +260,19 @@ void initializeHists(bool makeCuts)
   h_demcpri_t0 = new TH1F("h_demcpri_t0", "demcpri.t0", 100, 400, 900);
   h_demcpri_t0->SetXTitle("t_0 (ns)");
 
+  //h_delta_t_minus_demcpri_t0
+  h_delta_t_minus_demcpri_t0 = new TH1F("h_delta_t_minus_demcpri_t0", "de.t0 - crvinfo._timeWindowStart -demcpri.t0", 100, -500, 300);
+  h_delta_t_minus_demcpri_t0->SetXTitle("(ns)");
+
+
+  //h_de_t0_minus_demcpri_t0
+  h_de_t0_minus_demcpri_t0 = new TH1F("h_de_t0_minus_demcpri_t0", "de.t0 - demcpri.t0", 100, 0, 500);
+  h_de_t0_minus_demcpri_t0->SetXTitle("(ns)");
+
+  //Neutron kinetic energy
+  h_neutronKE = new TH1F("h_neutronKE", "Kinetic Energy of Neutron Primaries", 100, 0, 10000);
+  h_neutronKE->SetXTitle("(MeV)");
+
 }
 
 
@@ -291,13 +307,14 @@ void deleteHists()
   h_delta_t_vs_z->Delete();
   h_demcgen_t0->Delete();
   h_demcpri_t0->Delete();
+  h_de_t0_minus_demcpri_t0->Delete();
+  h_neutronKE->Delete();
 
   g_crvinfomc_z0_vs_x0->Delete(); 
   g_crvinfomc_z0_vs_y0->Delete();
   g_crvinfomc_primaryZ_vs_X->Delete();
   g_det0_vs_CRVtimeWindowStart->Delete();
   g_det0_vs_crvinfomc_time->Delete();
-  
 
 }
 
@@ -373,17 +390,27 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
     }
   else 
     {
-      cout << "\n" << endl;
+      cout << "\nReconstructed particles (demc.pdg)" << endl;
       cout << "Number of e- events = " << tree->GetEntries(cuts + "demc.pdg==11")  << endl;
       cout << "Number of e+ events = " << tree->GetEntries(cuts + "demc.pdg==-11")  << endl;
       cout << "Number of mu- events = " << tree->GetEntries(cuts + "demc.pdg==13")  << endl;
       cout << "Number of mu+ events = " << tree->GetEntries(cuts + "demc.pdg==-13")  << endl;
+
+      cout << "\nPrimary particles (demcgen.pdg)" << endl;
+      cout << "Number of n events = " << tree->GetEntries(cuts + "demcgen.pdg==2112")  << endl;
+      cout << "Number of p+ events = " << tree->GetEntries(cuts + "demcgen.pdg==2212")  << endl;
+      cout << "Number of mu- events = " << tree->GetEntries(cuts + "demc.pdg==13")  << endl;
+      cout << "Number of mu+ events = " << tree->GetEntries(cuts + "demc.pdg==-13")  << endl;
+      cout << "Number of pi- events = " << tree->GetEntries(cuts + "demc.pdg==-211")  << endl;
+      cout << "Number of pi+ events = " << tree->GetEntries(cuts + "demc.pdg==211")  << endl;
      
-      cout << "Other events:" << endl;
+      cout << "\nOther reconstructed events:" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "abs(demc.pdg)>211","");
       cout << "Events which were not produced by a muon that did not produce coincidences in the CRV:" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg:demc.pdg:deent.mom",cuts +  "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
       cout << "\n" << endl;  
+
+     
     }
 
   if (makeCuts)
@@ -402,12 +429,14 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   //tree->Scan("evtinfo.subrunid:evtinfo.eventid:(de.t0 - crvinfo._timeWindowStart):crvinfomc._z[0]:demc.pdg:demcgen.pdg",cuts +"(de.t0 - crvinfo._timeWindowStart)<0&&crvinfomc._z[0]/1000>12","");
   // cout << "Events in upper cluster of delta t vs z plot" << endl;
   //tree->Scan("evtinfo.subrunid:evtinfo.eventid:(de.t0 - crvinfo._timeWindowStart):crvinfomc._z[0]:demc.pdg:demcgen.pdg",cuts + "(de.t0 - crvinfo._timeWindowStart)>30&&crvinfomc._z[0]/1000>12","");
+  
 
   //Initialize the histograms
   initializeHists(makeCuts);
   
   //Choose which stats to displace
-  gStyle->SetOptStat(1110110);
+  //gStyle->SetOptStat(111110);
+  gStyle->SetOptStat(1111111);
 
   //Choose file format to use
   string filetype = ".png";
@@ -732,6 +761,39 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   logCanv->SaveAs(("standardizedPlots/demcpri_t0_logY" + cutIdentifier + filetype).c_str());
   
  
+  //h_delta_t_minus_demcpri_t0
+  tree->Draw("de.t0 - crvinfo._timeWindowStart - demcpri.t0>>+h_delta_t_minus_demcpri_t0",cuts, "goff");
+  h_delta_t_minus_demcpri_t0 = (TH1F*) gDirectory->Get("h_delta_t_minus_demcpri_t0");
+  canv->cd();
+  h_delta_t_minus_demcpri_t0->Draw();
+  canv->SaveAs(("standardizedPlots/delta_t_minus_demcpri_t0" + cutIdentifier + filetype).c_str());
+  logCanv->cd();
+  h_delta_t_minus_demcpri_t0->Draw();
+  logCanv->SaveAs(("standardizedPlots/delta_t_minus_demcpri_t0_logy" + cutIdentifier + filetype).c_str());
+  
+
+  // h_de_t0_minus_demcpri_t0
+  tree->Draw("de.t0 - demcpri.t0>>+h_de_t0_minus_demcpri_t0",cuts, "goff");
+  h_de_t0_minus_demcpri_t0 = (TH1F*) gDirectory->Get("h_de_t0_minus_demcpri_t0");
+  canv->cd();
+  h_de_t0_minus_demcpri_t0->Draw();
+  canv->SaveAs(("standardizedPlots/de_t0_minus_demcpri_t0" + cutIdentifier + filetype).c_str());
+  logCanv->cd();
+  h_de_t0_minus_demcpri_t0->Draw();
+  logCanv->SaveAs(("standardizedPlots/de_t0_minus_demcpri_t0_logy" + cutIdentifier + filetype).c_str());
+  
+
+  //Neutron kinetic energy
+  tree->Draw("sqrt(((demcgen.momx*demcgen.momx)+(demcgen.momy*demcgen.momy)+(demcgen.momz*demcgen.momz)) + (939.56*939.56)) - 939.56 >>+h_neutronKE",cuts+"demcgen.pdg==2112", "goff");
+  h_neutronKE = (TH1F*) gDirectory->Get("h_neutronKE");
+  canv->cd();
+  h_neutronKE->Draw();
+  canv->SaveAs(("standardizedPlots/neutronKE" + cutIdentifier + filetype).c_str());
+  logCanv->cd();
+  h_neutronKE->Draw();
+  logCanv->SaveAs(("standardizedPlots/neutronKE_logY" + cutIdentifier + filetype).c_str());
+
+
   //Clean up
   canv->Close();
   logCanv->Close();
