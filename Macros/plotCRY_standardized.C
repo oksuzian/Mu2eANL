@@ -25,28 +25,8 @@
 
 static bool INC_TRKQUAL_SFX = false; //Prior to mid-July, dequal leaves were named with suffixes - set to true to read trees prior to this date
 
-/*********************************************************************************************************************************************************/
-////////////////////////////////////////////////////    Define Standard Cuts    ///////////////////////////////////////////////////////////////////////////
 
-//Signal cuts
-string momentum_cut = "deent.mom>100 && deent.mom<110"; //Use wider momentum window than experimental signal window
-string no_upstream = "ue.status<0";
-string trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
-string trk_cut_pid = "dequal.TrkPIDDeM>0.9";
-string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
-string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
-string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
-//string timing_cut = "de.t0>700 && de.t0<1695"; // This is the standard window
-string timing_cut = "de.t0>700 && de.t0<1600"; //Use 1600 to avoid edge effects on DBY plots
-string all_cuts_MDC = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string signalCuts = all_cuts_MDC + "&&" + trk_cut_pid + "&&" + timing_cut;
-string noMom = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid + "&&" + timing_cut; 
 
-//Alternative cuts
-string d0is0 = "demcent.d0==0";
-string noMomNoPID = trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string testCut = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + trk_cut_pid + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + timing_cut; 
-string testCut2 = noMom;
 
 /*********************************************************************************************************************************************************/
 ///////////////////////////////////////////////////    Define Standard Histograms & Graphs    /////////////////////////////////////////////////////////////
@@ -81,6 +61,7 @@ TH1F *h_demcpri_t0;
 TH1F *h_delta_t_minus_demcpri_t0;
 TH1F *h_de_t0_minus_demcpri_t0;
 TH1F *h_neutronKE;
+TH1F *h_neutronKE_noCRV;
 
 TGraph *g_crvinfomc_z0_vs_x0; 
 TGraph *g_crvinfomc_z0_vs_y0;
@@ -270,8 +251,12 @@ void initializeHists(bool makeCuts)
   h_de_t0_minus_demcpri_t0->SetXTitle("(ns)");
 
   //Neutron kinetic energy
-  h_neutronKE = new TH1F("h_neutronKE", "Kinetic Energy of Neutron Primaries", 100, 0, 10000);
+  h_neutronKE = new TH1F("h_neutronKE", "Kinetic Energy of Neutron Primaries", 100, 0, 350000);
   h_neutronKE->SetXTitle("(MeV)");
+
+  //Neutron kinetic energy
+  h_neutronKE_noCRV = new TH1F("h_neutronKE_noCRV", "Kinetic Energy of Neutron Primaries without CRV Hits", 50, 0, 25000);
+  h_neutronKE_noCRV->SetXTitle("(MeV)");
 
 }
 
@@ -309,6 +294,7 @@ void deleteHists()
   h_demcpri_t0->Delete();
   h_de_t0_minus_demcpri_t0->Delete();
   h_neutronKE->Delete();
+  h_neutronKE_noCRV->Delete();
 
   g_crvinfomc_z0_vs_x0->Delete(); 
   g_crvinfomc_z0_vs_y0->Delete();
@@ -325,6 +311,55 @@ void deleteHists()
 //Produce and save plots of each histogram
 void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMomCut = true, bool scan = false)
 {
+
+  /********************************************************************************************************************************************************/
+  //////////////////////////////////////////////////    Define Standard Cuts    ///////////////////////////////////////////////////////////////////////////
+
+  //Signal cuts
+  string momentum_cut = "deent.mom>100 && deent.mom<110"; //Use wider momentum window than experimental signal window
+  string no_upstream = "ue.status<0";
+  string trk_qual;
+  string trk_cut_pid;
+  if (INC_TRKQUAL_SFX)
+    {
+      trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
+      trk_cut_pid = "dequal.TrkPIDDeM>0.9";
+    }
+  else
+    {
+      trk_qual = "dequal.TrkQual>0.8";; //For original CRY1 analysis this was 0.4
+      trk_cut_pid = "dequal.TrkPID>0.9";
+    }
+  string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
+  string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
+  string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
+  //string timing_cut = "de.t0>700 && de.t0<1695"; // This is the standard window
+  string timing_cut = "de.t0>700 && de.t0<1600"; //Use 1600 to avoid edge effects on DBY plots
+  string all_cuts_MDC = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+  string signalCuts = all_cuts_MDC + "&&" + trk_cut_pid + "&&" + timing_cut;
+  string noMom = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid + "&&" + timing_cut; 
+  
+  //Alternative cuts
+  string d0is0 = "demcent.d0==0";
+  string noMomNoPID = trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+  string testCut = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + trk_cut_pid + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + timing_cut; 
+  string testCut2 = noMom;
+
+
+  //////////////////////////////////////////////////////////// e^+ cuts //////////////////////////////////////////////////////////////////////////////////
+  string nactive = "de.nactive > 20 && de.nactive < 200";
+  string nhits_minus_nactive = "(de.nhits - de.nactive) > 0 && (de.hits - de.nactive) < 5";
+  string perr = "deent.momerr > 0 && deent.momerr < 0.4";
+  string t0err = "de.t0err> 0 && de.t0err < 1.5";
+  string tandip = "deent.td > 0.57";
+  string d0 = "-1*deent.d0 > -100 && -1*deent < 100";
+  string rmax = "abs(deent.d0+2.0/deent.om)>430. && abs(deent.d0+2.0/deent.om)<690.";
+  string chisqrd_dof = "(de.chisq / de.ndof) > 0 && (de.chisq / de.ndof) < 5";
+  string mom = "deent.mom > 90.5 && deent.mom < 92.5";
+  string t0 = "de.t0 > 700 && de.t0 < 1695";
+  //string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+rmax+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0; //std cuts
+  string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0+"&&"+trk_cut_pid;//+"&&"+trk_qual; //Add pid + trk qual
+
 
   //Set up canvases
   TCanvas *canv = new TCanvas("canv", "CRY Plots", 800, 600);
@@ -355,6 +390,8 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
       else
 	cuts = TCut(noMom.c_str());
 
+      if (!neg)
+	cuts = TCut(ePlusCuts.c_str());
       //cuts = TCut(testCut.c_str());////////////////////////////////////////////
       // cuts = TCut(testCut2.c_str());
       
@@ -399,10 +436,10 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
       cout << "\nPrimary particles (demcgen.pdg)" << endl;
       cout << "Number of n events = " << tree->GetEntries(cuts + "demcgen.pdg==2112")  << endl;
       cout << "Number of p+ events = " << tree->GetEntries(cuts + "demcgen.pdg==2212")  << endl;
-      cout << "Number of mu- events = " << tree->GetEntries(cuts + "demc.pdg==13")  << endl;
-      cout << "Number of mu+ events = " << tree->GetEntries(cuts + "demc.pdg==-13")  << endl;
-      cout << "Number of pi- events = " << tree->GetEntries(cuts + "demc.pdg==-211")  << endl;
-      cout << "Number of pi+ events = " << tree->GetEntries(cuts + "demc.pdg==211")  << endl;
+      cout << "Number of mu- events = " << tree->GetEntries(cuts + "demcgen.pdg==13")  << endl;
+      cout << "Number of mu+ events = " << tree->GetEntries(cuts + "demcgen.pdg==-13")  << endl;
+      cout << "Number of pi- events = " << tree->GetEntries(cuts + "demcgen.pdg==-211")  << endl;
+      cout << "Number of pi+ events = " << tree->GetEntries(cuts + "demcgen.pdg==211")  << endl;
      
       cout << "\nOther reconstructed events:" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "abs(demc.pdg)>211","");
@@ -429,7 +466,6 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   //tree->Scan("evtinfo.subrunid:evtinfo.eventid:(de.t0 - crvinfo._timeWindowStart):crvinfomc._z[0]:demc.pdg:demcgen.pdg",cuts +"(de.t0 - crvinfo._timeWindowStart)<0&&crvinfomc._z[0]/1000>12","");
   // cout << "Events in upper cluster of delta t vs z plot" << endl;
   //tree->Scan("evtinfo.subrunid:evtinfo.eventid:(de.t0 - crvinfo._timeWindowStart):crvinfomc._z[0]:demc.pdg:demcgen.pdg",cuts + "(de.t0 - crvinfo._timeWindowStart)>30&&crvinfomc._z[0]/1000>12","");
-  
 
   //Initialize the histograms
   initializeHists(makeCuts);
@@ -792,6 +828,16 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   logCanv->cd();
   h_neutronKE->Draw();
   logCanv->SaveAs(("standardizedPlots/neutronKE_logY" + cutIdentifier + filetype).c_str());
+
+  //Neutron kinetic energy
+  tree->Draw("sqrt(((demcgen.momx*demcgen.momx)+(demcgen.momy*demcgen.momy)+(demcgen.momz*demcgen.momz)) + (939.56*939.56)) - 939.56 >>+h_neutronKE_noCRV",cuts+"demcgen.pdg==2112"+"@crvinfo.size()<1", "goff");
+  h_neutronKE_noCRV = (TH1F*) gDirectory->Get("h_neutronKE_noCRV");
+  canv->cd();
+  h_neutronKE_noCRV->Draw();
+  canv->SaveAs(("standardizedPlots/neutronKE_noCRV" + cutIdentifier + filetype).c_str());
+  logCanv->cd();
+  h_neutronKE_noCRV->Draw();
+  logCanv->SaveAs(("standardizedPlots/neutronKE_noCRV_logY" + cutIdentifier + filetype).c_str());
 
 
   //Clean up
