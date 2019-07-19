@@ -26,8 +26,6 @@
 static bool INC_TRKQUAL_SFX = false; //Prior to mid-July, dequal leaves were named with suffixes - set to true to read trees prior to this date
 
 
-
-
 /*********************************************************************************************************************************************************/
 ///////////////////////////////////////////////////    Define Standard Histograms & Graphs    /////////////////////////////////////////////////////////////
 
@@ -308,8 +306,14 @@ void deleteHists()
 /*********************************************************************************************************************************************************/
 ///////////////////////////////////////////////////    Make Standardized Plots    /////////////////////////////////////////////////////////////////////////
 
-//Produce and save plots of each histogram
-void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMomCut = true, bool scan = false)
+/* Produce and save plots of each histogram
+   @param treePath : Path to the TrkAna tree to be plotted
+   @param neg : true if plotting the negative tree, false for the positive tree
+   @param makeCuts : true if cuts should be applied
+   @param useMomCut : true if momentum cut should be applied (only applicable if makeCuts is true)
+   @param onlyScan : If true, doesn't make plots - only performs initial events counts and scans
+ */
+void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMomCut = true, bool onlyScan = false)
 {
 
   /********************************************************************************************************************************************************/
@@ -359,12 +363,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   string t0 = "de.t0 > 700 && de.t0 < 1695";
   //string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+rmax+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0; //std cuts
   string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0+"&&"+trk_cut_pid;//+"&&"+trk_qual; //Add pid + trk qual
-
-
-  //Set up canvases
-  TCanvas *canv = new TCanvas("canv", "CRY Plots", 800, 600);
-  TCanvas *logCanv = new TCanvas("logCanv", "CRY Plots - Logscale", 800, 600);
-  logCanv->SetLogy(1);
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //Read tree from file
   TFile inFile(treePath.c_str());
@@ -393,7 +392,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
       if (!neg)
 	cuts = TCut(ePlusCuts.c_str());
       //cuts = TCut(testCut.c_str());////////////////////////////////////////////
-      // cuts = TCut(testCut2.c_str());
+      cuts = TCut(trk_cut_pid.c_str());
       
       cutIdentifier = "_cut";
     }
@@ -403,9 +402,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
       cutIdentifier = "";
     }
 
-
+  
   //Print out some information about the PDG of events 
-  if (scan)
+  if (false) //////////////////////////////////////////////////// Change this if you want the below scans to run
     {
       cout << "Events which were not produced by a muon that did not produce coincidences in the CRV" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demcgen.pdg",cuts + "abs(demcgen.pdg)!=13" + "@crvinfo.size()<1","");
@@ -467,8 +466,16 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   // cout << "Events in upper cluster of delta t vs z plot" << endl;
   //tree->Scan("evtinfo.subrunid:evtinfo.eventid:(de.t0 - crvinfo._timeWindowStart):crvinfomc._z[0]:demc.pdg:demcgen.pdg",cuts + "(de.t0 - crvinfo._timeWindowStart)>30&&crvinfomc._z[0]/1000>12","");
 
+  if (onlyScan) 
+    exit(0);
+
   //Initialize the histograms
   initializeHists(makeCuts);
+
+  //Set up canvases
+  TCanvas *canv = new TCanvas("canv", "CRY Plots", 800, 600);
+  TCanvas *logCanv = new TCanvas("logCanv", "CRY Plots - Logscale", 800, 600);
+  logCanv->SetLogy(1);
   
   //Choose which stats to displace
   //gStyle->SetOptStat(111110);

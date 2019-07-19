@@ -3,8 +3,32 @@
 //Ben Barton
 //bbarton@virginia.edu
 
-//Number of cut variations to plot (not including no cuts as a variation)
-const int NCUTS = 2;
+/**********************************************************************************************************************************************************************************/
+///////////////////////////////////////////////////////////////   Control Params    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+const int NCUTS = 2; //Number of cut variations to plot (not including no cuts as a variation) - MUST BE >= 2 WITH CURRENT IMPLEMENTATION
+static bool NEGATIVE = true; //Look at the negative tree (electrons)
+static bool INC_TRKQUAL_SFX = true; //Prior to mid-July 2019, dequal leaves were named with suffixes - set to true to read trees prior to this date
+
+/**********************************************************************************************************************************************************************************/
+///////////////////////////////////////////////////////////////   Input Files    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////// June 2019 Collaboration meeting era files -- Set INC_TRKQUAL_SFX to true
+TFile file_cry1("/mu2e/data/users/bbarton/CRY1/TrkAnaTrees/cry1_unmixedTrkAna.root");
+TFile file_cry2("/mu2e/data/users/bbarton/CRY2/TrkAnaTrees/cry2_trkana.root");
+TFile file_dby("/mu2e/data/users/bbarton/DBY/TrkAnaTrees/dby_trkana.root"); 
+
+/////// July 2019 reprocessed files -- Set INC_TRKQUAL_SFX to false
+//TFile file_cry1("/mu2e/data/users/bbarton/CRY1/TrkAnaTrees/cry1_unmixedTrkAna.root");
+//TFile file_cry2("/mu2e/data/users/bbarton/CRY2/TrkAnaTrees/cry2_new15July2019.root");
+//TFile file_dby("/mu2e/data/users/bbarton/DBY/TrkAnaTrees/");
+
+/**********************************************************************************************************************************************************************************/
+
+
+
+/**********************************************************************************************************************************************************************************/
+//////////////////////////////////////////////////////    Define Standard Parameters for Each Variable   ///////////////////////////////////////////////////////////////////////////
 
 //Struct to hold parameters for a histograms in a contained unit 
 //Arrays should be the length of the number of cut variations to be plotted
@@ -15,36 +39,6 @@ typedef struct{
   string xTitle;
   string title;
 } histParams;
-
-
-/**********************************************************************************************************************************************************************************/
-//////////////////////////////////////////////////////////////    Define Cuts    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-//Signal cuts
-string momentum_cut = "deent.mom>100 && deent.mom<110"; 
-string no_upstream = "ue.status<0";
-string trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
-string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
-string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
-string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
-string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
-string timing_cut = "de.t0>700 && de.t0<1600"; // Official cuts 1695 upper threshold
-string all_cuts_MDC = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string signalCuts = all_cuts_MDC + "&&" + trk_cut_pid + "&&" + timing_cut;
-string noMom = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid + "&&" + timing_cut; 
-
-//Alternative cuts
-string d0is0 = "demcent.d0==0";
-string noMomNoPID = trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string testCut = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R;
-
-//Cut lists & identifiers // Add any additional cuts that you want to make to this list
-string cuts[NCUTS + 1] = {"", signalCuts, noMom};
-string cutIDs[NCUTS + 1] = {"", "sigCuts", "noMomCut"};
-
-/**********************************************************************************************************************************************************************************/
-//////////////////////////////////////////////////////    Define Standard Parameters for Each Variable   ///////////////////////////////////////////////////////////////////////////
-
 
 //This seems clunky but is the most efficient way to define a scalable number of histograms with predefined characteristics. Initializing new Histograms for each would be
 //innefficient and messy.To add a new histogram
@@ -345,16 +339,99 @@ void defHistParams()
 //Files are saved as pngs/pdfs
 void compareAll()
 {
+  if (NCUTS < 2)
+    {
+      cout << "NCUTS must be >= 2" << endl;
+      exit(-1);
+    }
+
+  //////////////////////////////////////////////////////////////    Define Cuts    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //Signal cuts
+  string momentum_cut = "deent.mom>100 && deent.mom<110"; 
+  string no_upstream = "ue.status<0";
+  string trk_qual;
+  string trk_cut_pid; //Collaboration meeting analysis done with pid >0.5, new standard is >0.9
+  if (INC_TRKQUAL_SFX)
+    {
+      trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
+      trk_cut_pid = "dequal.TrkPIDDeM>0.9";
+    }
+  else
+    {
+      trk_qual = "dequal.TrkQual>0.8";; //For original CRY1 analysis this was 0.4
+      trk_cut_pid = "dequal.TrkPID>0.9";
+    }
+  string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
+  string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
+  string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
+  string timing_cut = "de.t0>700 && de.t0<1600"; // Official cuts 1695 upper threshold
+  string all_cuts_MDC = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+  string signalCuts = all_cuts_MDC + "&&" + trk_cut_pid + "&&" + timing_cut;
+  string noMom = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid + "&&" + timing_cut; 
+
+  //Alternative cuts
+  string d0is0 = "demcent.d0==0";
+  string noMomNoPID = trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+  string testCut = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R;
+  
+  ///////////////////////////////////////////////////////////// e^+ cuts //////////////////////////////////////////////////////////////////////////////////
+  string nactive = "de.nactive > 20 && de.nactive < 200";
+  string nhits_minus_nactive = "(de.nhits - de.nactive) > 0 && (de.hits - de.nactive) < 5";
+  string perr = "deent.momerr > 0 && deent.momerr < 0.4";
+  string t0err = "de.t0err> 0 && de.t0err < 1.5";
+  string tandip = "deent.td > 0.57";
+  string d0 = "-1*deent.d0 > -100 && -1*deent < 100";
+  string rmax = "abs(deent.d0+2.0/deent.om)>430. && abs(deent.d0+2.0/deent.om)<690.";
+  string chisqrd_dof = "(de.chisq / de.ndof) > 0 && (de.chisq / de.ndof) < 5";
+  string mom = "deent.mom > 90.5 && deent.mom < 92.5";
+  string t0 = "de.t0 > 700 && de.t0 < 1695";
+  string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+rmax+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0; //std cuts
+  string ePlusCutsPlus =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0+"&&"+trk_cut_pid+"&&"+trk_qual; //Add pid, trk qual
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //Cut lists & identifiers // Add any additional cuts that you want to make to this list
+  string cuts[NCUTS + 1];
+  string cutIDs[NCUTS + 1];
+
+  if (NEGATIVE)
+    {
+      cuts[0] = "";
+      cutIDs[0] = "";
+      cuts[1] = signalCuts;
+      cutIDs[1] = "sigCuts";
+      cuts[2] = noMom;
+      cutIDs[2] = "noMomCut";
+    }
+  else
+    {
+      cuts[0] = "";
+      cutIDs[0] = "";
+      cuts[1] = ePlusCuts;
+      cutIDs[1] = "stdCuts";
+      cuts[2] = ePlusCutsPlus;
+      cutIDs[2] = "stdCuts-PID-TrkQual";
+    }
+
   defHistParams(); //Define the histograms to be made
 
   gStyle->SetOptStat(0);
 
-  TFile file_cry1("/mu2e/data/users/bbarton/CRY1/TrkAnaTrees/cry1_unmixedTrkAna.root");
-  TFile file_cry2("/mu2e/data/users/bbarton/CRY2/TrkAnaTrees/cry2_trkana.root");
-  TFile file_dby("/mu2e/data/users/bbarton/DBY/TrkAnaTrees/dby_trkana.root");
-  TTree *tree_cry1 = (TTree*) file_cry1.Get("TrkAnaNeg/trkana");
-  TTree *tree_cry2 = (TTree*) file_cry2.Get("TrkAnaNeg/trkana");
-  TTree *tree_dby = (TTree*) file_dby.Get("TrkAnaNeg/trkana");
+  //Read the trees
+  TTree *tree_cry1;
+  TTree *tree_cry2;
+  TTree *tree_dby;
+  if (NEGATIVE) {
+    tree_cry1 = (TTree*) file_cry1.Get("TrkAnaNeg/trkana");
+    tree_cry2 = (TTree*) file_cry2.Get("TrkAnaNeg/trkana");
+    tree_dby = (TTree*) file_dby.Get("TrkAnaNeg/trkana");
+  }
+  else
+    {
+      tree_cry1 = (TTree*) file_cry1.Get("TrkAnaPos/trkana");
+      tree_cry2 = (TTree*) file_cry2.Get("TrkAnaPos/trkana");
+      tree_dby = (TTree*) file_dby.Get("TrkAnaPos/trkana");
+    }
 
   TCanvas *canv = new TCanvas("canv","CRY-1, CRY-2, & DBY Comparisons",1800,600);
 
@@ -365,6 +442,7 @@ void compareAll()
 
 	  histParams params = hist_params.at(v);
 
+	  //Define the histograms based on predefined settings
 	  TH1F *hCRY1 = new TH1F("hCRY1", params.title.c_str(), params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
 	  TH1F *hCRY2 = new TH1F("hCRY2", params.title.c_str(), params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);;
 	  TH1F *hDBY = new TH1F("hDBY", params.title.c_str(), params.nBins[cutN], params.xMins[cutN], params.xMaxs[cutN]);
