@@ -17,8 +17,8 @@ outputs: { @table::mu2e.outputs.g4s4Defs }
 
 physics.producers.g4run.physics.NoDecay: [130] // K-long lifetime to infinity
 
-physics.trigger_paths: [ detPath ]
-physics.out: [ detectorOutput ] 
+#physics.trigger_paths: [  ]
+#physics.out: [ detectorOutput ] 
 
 // We should run genCounter for all EmptyEvent jobs.
 physics.producers.genCounter: {module_type: GenEventCounter }
@@ -63,11 +63,18 @@ physics.producers.g4run.MultiStageParameters: {
 #   	      pars: [{type: kineticEnergy cut: 100}, 
 #	     	     {type: pdgId pars: [2112]}] },
 #           { type: pdgId pars: [130] }  ]
-   type: pdgId //This version will only accept K-longs
-   pars: [130]
+#    type: pdgId
+#    pars: [130]
 #}
 
-
+##Resample only K-longs and write to DSVacuum
+physics.producers.g4run.Mu2eG4CommonCut: {
+   type: union
+   pars: [ {type: pdgId pars: [130]},
+   	   {type: inVolume 
+	    pars: [DS1Vacuum, DS2Vacuum, DS3Vacuum]
+	    write: DSVacuum} ]
+}
 
 
 
@@ -78,14 +85,16 @@ physics.filters.dsPrefilter: {
    module_type: FilterG4Out
    noInstanceName : true
 #   mainHitInputs: [ "g4run:tracker", "g4run:calorimeter", "g4run:calorimeterRO", "g4run:CRV" ] //Use this line if want to include CRV hits
-   mainHitInputs: [ "g4run:tracker", "g4run:calorimeter", "g4run:calorimeterRO"] //Use this line if only want detector hits inside DSVacuum
-   extraHitInputs: [ "g4run:protonabsorber"]
+#   mainHitInputs: [ "g4run:tracker", "g4run:calorimeter", "g4run:calorimeterRO"] //Use this line if only want detector hits inside DSVacuum
+   mainHitInputs: [ "g4run:DSVacuum"] // Use this line if only want hits in the volume DSVcuum, not its internal detector volumes
+#   extraHitInputs: [ "g4run:protonabsorber"]
+   extraHitInputs: []
    numSimParticleCollections: 1
 }
 
 
-#physics.producers.g4run.flash.SDConfig.preSimulatedHits: [""]
-#mu2e.physics.producers.g4run.flash.SDConfig.preSimulatedHits:  [] ///////// This line doesn't do anything - had to change in prolog ????
+physics.producers.g4run.flash.SDConfig.preSimulatedHits: [""]
+mu2e.physics.producers.g4run.flash.SDConfig.preSimulatedHits:  [] ///////// This line doesn't do anything - had to change in prolog ????
 
 
 
@@ -106,9 +115,9 @@ physics.filters.detectorFilter: {
    module_type: "FilterG4Out"
    noInstanceName: true
    numSimParticleCollections: 1
-  
+   mainHitInputs: ["dsPrefilter:DSVacuum"] # Use this if writing to DSVacuum stream, not detectors
 #   mainHitInputs: ["dsPrefilter:tracker" , "dsPrefilter:CRV"] //Use this line if you want to include CRV hits
-   mainHitInputs: ["dsPrefilter:tracker"]  //Otherwise use this line
+#   mainHitInputs: ["dsPrefilter:tracker"]  //Otherwise use this line
    mainSPPtrInputs: ["CaloShowerStepFromStepPt"]
    extraHitInputs: [ ]
 }
@@ -127,20 +136,40 @@ physics.detPath: [ "genCounter", "flashResample",
    //need to remove compressPVDetector//  @sequence::physics.detPath
    "g4run",
    "g4consistent",
-   "dsPrefilter", # Filters out stuff not hitting tracker, calo, (or CRV if configured that way - see comments in that filter definition above)
-
-
-   "CaloShowerStepFromStepPt",
-   "detectorFilter", # filters out particles in calo showers
-
-   "CaloShowerCrystalSteps",
-   "CaloShowerROSteps",
    "HitDumper"
 ]
 
+physics.trig: ["flashResample","g4run","g4consistent"]
+physics.outputs: [truncatedEvtsOutput, DSVacuumOut]
+physics.an: ["genCounter",HitDumper]
+physics.end_paths: [outputs, an]
+physics.trigger_paths: [trig]
+
+outputs.DSVacuumOut : {
+      module_type : RootOutput
+      SelectEvents: ["trig"]
+      outputCommands:   [ "drop *_*_*_*",
+         "keep mu2e::GenParticles_*_*_*",
+         "keep mu2e::GenEventCount_*_*_*",
+         "keep mu2e::StatusG4_*_*_*"
+      ]
+      fileName    : "sim.owner.s1-resampled-dsvacuum.version.sequencer.art"
+   }
+
+outputs.truncatedEvtsOutput : {
+      module_type : RootOutput
+      SelectEvents: ["trig"]
+      outputCommands:   [ "drop *_*_*_*",
+         "keep mu2e::GenParticles_*_*_*",
+         "keep mu2e::GenEventCount_*_*_*",
+         "keep mu2e::StatusG4_*_*_*",
+         "keep *_g4run_*_*"
+      ]
+      fileName    : "sim.owner.beam-s1-resampled-dsvacuum.version.sequencer.art"
+   }
 
 // Set output file names
-services.TFileService.fileName: "nts.owner.dsregion-resampled.version.sequencer.root"
+services.TFileService.fileName: "nts.owner.dsregion-resampled-dsvacuum.version.sequencer.root"
 outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.sequencer.art"
 
 //Specify Mu2e geometry
