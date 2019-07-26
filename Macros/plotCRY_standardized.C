@@ -67,6 +67,9 @@ TGraph *g_crvinfomc_primaryZ_vs_X;
 TGraph *g_det0_vs_CRVtimeWindowStart;
 TGraph *g_det0_vs_crvinfomc_time;
 TGraph *g_cos_theta_vs_tandip;
+TGraph *g_oposx_vs_oposz;
+TGraph *g_oposy_vs_oposz;
+TGraph *g_oposy_vs_oposx;
 
 
 void initializeHists(bool makeCuts)
@@ -294,11 +297,13 @@ void deleteHists()
   h_neutronKE->Delete();
   h_neutronKE_noCRV->Delete();
 
-  g_crvinfomc_z0_vs_x0->Delete(); 
-  g_crvinfomc_z0_vs_y0->Delete();
-  g_crvinfomc_primaryZ_vs_X->Delete();
-  g_det0_vs_CRVtimeWindowStart->Delete();
-  g_det0_vs_crvinfomc_time->Delete();
+  // g_crvinfomc_z0_vs_x0->Delete(); 
+  // g_crvinfomc_z0_vs_y0->Delete();
+  // g_crvinfomc_primaryZ_vs_X->Delete();
+  // g_det0_vs_CRVtimeWindowStart->Delete();
+  // g_det0_vs_crvinfomc_time->Delete();
+  // g_oposx_vs_oposz->Delete();
+  //  g_oposy_vs_oposz->Delete();
 
 }
 
@@ -361,8 +366,8 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   string chisqrd_dof = "(de.chisq / de.ndof) > 0 && (de.chisq / de.ndof) < 5";
   string mom = "deent.mom > 90.5 && deent.mom < 92.5";
   string t0 = "de.t0 > 700 && de.t0 < 1695";
-  //string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+rmax+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0; //std cuts
-  string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0+"&&"+trk_cut_pid;//+"&&"+trk_qual; //Add pid + trk qual
+  string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+rmax+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0; //std cuts
+  // string ePlusCuts =nactive+"&&"+nhits_minus_nactive+"&&"+perr+"&&"+t0err+"&&"+tandip+"&&"+d0+"&&"+chisqrd_dof+"&&"+mom+"&&"+t0+"&&"+trk_cut_pid+"&&"+trk_qual; //Add pid + trk qual
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //Read tree from file
@@ -392,7 +397,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
       if (!neg)
 	cuts = TCut(ePlusCuts.c_str());
       //cuts = TCut(testCut.c_str());////////////////////////////////////////////
-      cuts = TCut(trk_cut_pid.c_str());
+      // cuts = TCut(trk_cut_pid.c_str());
       
       cutIdentifier = "_cut";
     }
@@ -524,24 +529,23 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   h_crvinfomc_z0_vs_x0->Draw("colz");
   canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_x0" + cutIdentifier + filetype).c_str());
 
-  tree->Draw("crvinfomc._x[0]/1000:crvinfomc._z[0]/1000>>+g_crvinfomc_z0_vs_x0",cuts, "goff");
-  g_crvinfomc_z0_vs_x0 = (TGraph*) gDirectory->Get("g_crvinfomc_z0_vs_x0");
-  g_crvinfomc_z0_vs_x0->SetTitle("crvinfomc._z[0]:crvinfomc._x[0];z at CRV (m); x at CRV (m)");
   canv->cd();
-  g_crvinfomc_z0_vs_x0->Draw();
+  tree->Draw("crvinfomc._x[0]/1000:crvinfomc._z[0]/1000",cuts);
+  g_crvinfomc_z0_vs_x0 = (TGraph*) gPad->GetPrimitive("Graph");
+  g_crvinfomc_z0_vs_x0->SetTitle("crvinfomc._z[0]:crvinfomc._x[0];z at CRV (m); x at CRV (m)");
+  canv->Update();
   canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_x0_graph" + cutIdentifier + filetype).c_str());
 
   //h_crvinfomc_z0_vs_y0
-  tree->Draw("crvinfomc._y[0]/1000:crvinfomc._z[0]/1000>>+h_crvinfomc_z0_vs_y0",cuts, "goff");
+  tree->Draw("crvinfomc._y[0]/1000:crvinfomc._z[0]/1000>>+h_crvinfomc_z0_vs_y0",cuts);
   canv->cd();
   h_crvinfomc_z0_vs_y0->Draw("colz");
   canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_y0" + cutIdentifier + filetype).c_str());
 
-  tree->Draw("crvinfomc._y[0]/1000:crvinfomc._z[0]/1000>>+g_crvinfomc_z0_vs_y0",cuts, "goff");
-  g_crvinfomc_z0_vs_y0 = (TGraph*) gDirectory->Get("g_crvinfomc_z0_vs_y0");
-  g_crvinfomc_z0_vs_y0->SetTitle("crvinfomc._z[0]:crvinfomc._y[0];z at CRV (m); y at CRV (m)");
   canv->cd();
-  g_crvinfomc_z0_vs_y0->Draw();
+  tree->Draw("crvinfomc._y[0]/1000:crvinfomc._z[0]/1000",cuts);
+  g_crvinfomc_z0_vs_y0 = (TGraph*) gPad->GetPrimitive("Graph");
+  g_crvinfomc_z0_vs_y0->SetTitle("crvinfomc._z[0]:crvinfomc._y[0];z at CRV (m); y at CRV (m)");
   canv->SaveAs(("standardizedPlots/crvinfomc_z0_vs_y0_graph" + cutIdentifier + filetype).c_str());
   
   //crvinfomc._primaryX
@@ -598,11 +602,11 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   h_crvinfomc_primaryZ_vs_X->Draw("colz");
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X" + cutIdentifier + filetype).c_str());
 
-  tree->Draw("crvinfomc._primaryX:crvinfomc._primaryZ>>+g_crvinfomc_primaryZ_vs_X",cuts, "goff");
-  g_crvinfomc_primaryZ_vs_X = (TGraph*) gDirectory->Get("g_crvinfomc_primaryZ_vs_X");
-  g_crvinfomc_primaryZ_vs_X->SetTitle("crvinfomc._primaryZ:crvinfomc._primaryX;z (m); x (m)");
   canv->cd();
-  g_crvinfomc_primaryZ_vs_X->Draw();
+  tree->Draw("crvinfomc._primaryX:crvinfomc._primaryZ",cuts);
+  g_crvinfomc_primaryZ_vs_X = (TGraph*) gPad->GetPrimitive("Graph");
+  g_crvinfomc_primaryZ_vs_X->SetTitle("crvinfomc._primaryZ:crvinfomc._primaryX;z (m); x (m)");
+  canv->Update();
   canv->SaveAs(("standardizedPlots/crvinfomc_primaryZ_vs_X_graph" + cutIdentifier + filetype).c_str());
 
   //crvinfomc._primaryPdgId
@@ -705,11 +709,11 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   h_det0_vs_CRVtimeWindowStart->Draw("colz");
   canv->SaveAs(("standardizedPlots/det0_vs_CRVtimeWindowStart" + cutIdentifier + filetype).c_str());
 
-  tree->Draw("de.t0:crvinfo._timeWindowStart>>+g_det0_vs_CRVtimeWindowStart",cuts, "goff");
-  g_det0_vs_CRVtimeWindowStart = (TGraph*) gDirectory->Get("g_det0_vs_CRVtimeWindowStart");
-  g_det0_vs_CRVtimeWindowStart->SetTitle("de.t0:crvinfo._timeWindowStart;crvinfo._timeWindowStart; de.t0(m)");
   canv->cd();
-  g_det0_vs_CRVtimeWindowStart->Draw();
+  tree->Draw("de.t0:crvinfo._timeWindowStart",cuts);
+  g_det0_vs_CRVtimeWindowStart = (TGraph*) gPad->GetPrimitive("Graph");
+  g_det0_vs_CRVtimeWindowStart->SetTitle("de.t0:crvinfo._timeWindowStart;crvinfo._timeWindowStart; de.t0(m)");
+  canv->Update();
   canv->SaveAs(("standardizedPlots/det0_vs_CRVtimeWindowStart_graph" + cutIdentifier + filetype).c_str());
   
   //de.t0:crvinfomc._time
@@ -718,11 +722,11 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   h_det0_vs_crvinfomc_time->Draw("colz");
   canv->SaveAs(("standardizedPlots/det0_vs_crvinfomc_time" + cutIdentifier + filetype).c_str());
 
-  tree->Draw("de.t0:crvinfomc._time>>+g_det0_vs_crvinfomc_time",cuts, "goff");
-  g_det0_vs_crvinfomc_time = (TGraph*) gDirectory->Get("g_det0_vs_crvinfomc_time");
-  g_det0_vs_crvinfomc_time->SetTitle("de.t0:crvinfo._crvinfomc_time;crvinfomc._time; de.t0(m)");
   canv->cd();
-  g_det0_vs_crvinfomc_time->Draw();
+  tree->Draw("de.t0:crvinfomc._time",cuts);
+  g_det0_vs_crvinfomc_time = (TGraph*) gPad->GetPrimitive("Graph");
+  g_det0_vs_crvinfomc_time->SetTitle("de.t0:crvinfo._crvinfomc_time;crvinfomc._time; de.t0(m)");
+  canv->Update();
   canv->SaveAs(("standardizedPlots/det0_vs_crvinfomc_time_graph" + cutIdentifier + filetype).c_str());
 
   //de.t0 - crvinfo._timeWindowStart
@@ -845,6 +849,38 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   logCanv->cd();
   h_neutronKE_noCRV->Draw();
   logCanv->SaveAs(("standardizedPlots/neutronKE_noCRV_logY" + cutIdentifier + filetype).c_str());
+
+
+  //x:z position of the electron/positron
+  string pdgSign;
+  if (neg)
+    pdgSign = "";
+  else
+    pdgSign = "-";
+
+  canv->cd();
+  tree->Draw("demc.oposx:demc.oposz",("demc.pdg=="+pdgSign+"11").c_str());
+  g_oposx_vs_oposz = (TGraph*) gPad->GetPrimitive("Graph");
+  g_oposx_vs_oposz->SetTitle("Reconstructed e^- : Origin Position;z position (mm);x position (mm)");
+  canv->Update();
+  canv->SaveAs(("standardizedPlots/demc_oposx_vs_oposz" + cutIdentifier + filetype).c_str());
+
+  
+  //y:z position of the electron/positron
+  canv->cd();
+  tree->Draw("demc.oposy:demc.oposz",("demc.pdg=="+pdgSign+"11").c_str());
+  g_oposy_vs_oposz = (TGraph*) gPad->GetPrimitive("Graph");
+  g_oposy_vs_oposz->SetTitle("Reconstructed e^- : Origin Position;z position (mm);y position (mm)");
+  canv->Update();
+  canv->SaveAs(("standardizedPlots/demc_oposy_vs_oposz" + cutIdentifier + filetype).c_str());
+  
+  //y:x position of the electron/positron
+  canv->cd();
+  tree->Draw("demc.oposy:demc.oposx",("demc.pdg=="+pdgSign+"11").c_str());
+  g_oposy_vs_oposx = (TGraph*) gPad->GetPrimitive("Graph");
+  g_oposy_vs_oposx->SetTitle("Reconstructed e^- : Origin Position;x position (mm);y position (mm)");
+  canv->Update();
+  canv->SaveAs(("standardizedPlots/demc_oposy_vs_oposx" + cutIdentifier + filetype).c_str());
 
 
   //Clean up
