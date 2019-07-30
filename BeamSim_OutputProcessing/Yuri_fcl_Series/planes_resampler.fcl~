@@ -1,0 +1,166 @@
+// Re-sample dsregion stream particles from stage-1 outputs
+// Ben Barton, 2019
+// based off JobConfig/beam/DS-flash.fcl by Andrei Gaponenko, 2018
+
+#include "JobConfig/beam/prolog.fcl"
+
+process_name: dsRegionResampling
+
+
+source: { module_type : EmptyEvent }
+services: { @table::mu2e.services.simServices }
+physics: { @table::mu2e.physics.g4s4Flash } 
+outputs: { @table::mu2e.outputs.g4s4Defs }
+
+//----------------------------------------------------------------
+// Mofidy setup fo	r resampling the dsregion from s1 outputs
+
+physics.producers.g4run.physics.NoDecay: [130] // K-long lifetime to infinity
+// FIX ME
+mu2eg4DefaultResourceLimits.maxSimParticleCollectionSize: 200000
+
+#physics.trigger_paths: [  ]
+#physics.out: [ detectorOutput ] 
+
+// We should run genCounter for all EmptyEvent jobs.
+physics.analyzers.genCounterLogger: {module_type: GenEventCountReader}
+
+//Module to produce an NTuple of event data for easy viewing of outputs
+physics.analyzers.HitDumper : {
+   module_type: StepPointMC1stHitDumper
+   hitsInputTag: "g4run:DSVacuum2"
+   TimeOffsets: {}
+}
+
+
+#physics : {
+#   analyzers: {
+#      genCountLogger: {
+#         module_type: GenEventCountReader
+#      }
+#    HitDumper: {
+#        module_type: StepPointMC1stHitDumper
+#        hitsInputTag: "g4run:DSVacuum2"
+#        TimeOffsets :  {  }
+#    }
+#   }
+#}
+
+
+
+
+// Bring in info from the previous stage
+physics.filters.flashResample: {
+   module_type: ResamplingMixer
+   fileNames: @nil  
+   readMode: "sequential"
+   wrapFiles: true
+   mu2e: {
+      products: {
+	 genParticleMixer: { mixingMap: [ [ "generate", "" ] ] }
+	 simParticleMixer: { mixingMap: [ ["planesFilter", ""] ] } 
+	 stepPointMCMixer: { mixingMap: [ [ "planesFilter:Planes", ":" ] ] }
+      }
+   }
+}
+
+// Point Mu2eG4 to the pre-simulated data
+physics.producers.g4run.MultiStageParameters: {
+   simParticleNumberOffset: 200000 
+   genInputHits:  [ "flashResample:Planes" ]
+   inputSimParticles: "flashResample"
+   inputMCTrajectories: ""
+   inputPhysVolumeMultiInfo: "" 
+}
+
+##Resample only K-longs and write to DSVacuum
+physics.producers.g4run.Mu2eG4CommonCut: {
+   type: union
+   pars: 
+   [
+   {type: intersection
+   pars: [ { type: kineticEnergy cut: 500 }, { type: pdgId pars: [ 2112, 2212] }]},
+   {type: intersection
+   pars: [ { type: kineticEnergy cut: 80 }, { type: pdgId pars: [ 22, 11, -11 ] }]},
+   {type: intersection
+   pars: [ { type: kineticEnergy cut: 45 }, { type: pdgId pars: [ 13, -13] }]},
+   {type: inVolume 
+   pars: [DS1Vacuum, DS2Vacuum, DS3Vacuum]
+   write: DSVacuum2}
+   ]
+}
+
+physics.producers.g4run.flash.SDConfig.preSimulatedHits: [""]
+mu2e.physics.producers.g4run.flash.SDConfig.preSimulatedHits:  [] ///////// This line doesn't do anything - had to change in prolog ????
+
+//----------------------------------------------------------------
+// The final filter
+physics.filters.dsFilter: {
+         module_type: FilterG4Out
+	 noInstanceName : true
+         mainHitInputs : [ "g4run:DSVacuum2" ]
+         extraHitInputs : [ ]
+         numSimParticleCollections : 1
+         vetoDaughters: []
+}
+
+physics.filters.g4status: {
+         module_type: FilterStatusG4
+         input: "g4run"
+	 maxAcceptedStatus: 1  #  status 10 and above means StepPointMCCollection may have non-dereferencable pointers
+}
+
+
+physics.producers.compressPVFull : {
+         module_type: CompressPhysicalVolumes
+         volumesInput : "g4run"
+         hitInputs : []
+         particleInputs : [ "g4run" ]
+}
+
+physics.trig: [flashResample, g4run, g4consistent, dsFilter]
+#physics.g4StatusFilter : ["flashResample", "g4run", "!g4status", compressPVFull ]
+physics.g4StatusFilter : ["flashResample", "g4run", "!g4status"]
+physics.outputs: [truncatedEvtsOutput, DSVacuumOut]
+physics.an: [HitDumper]
+physics.end_paths: [outputs, an]
+physics.trigger_paths: [trig, g4StatusFilter]
+
+outputs.DSVacuumOut : {
+      module_type : RootOutput
+      SelectEvents: ["trig"]
+      outputCommands:   [ "drop *_*_*_*",
+         "keep mu2e::GenParticles_*_*_*",
+         "keep mu2e::GenEventCount_*_*_*",
+         "keep mu2e::StatusG4_*_*_*",
+         "keep *_dsFilter_*_*"
+      ]
+      fileName    : "sim.owner.s1-resampled-dsvacuum.version.sequencer.art"
+   }
+
+outputs.truncatedEvtsOutput : {
+      module_type : RootOutput
+      SelectEvents: ["g4StatusFilter"]
+      outputCommands:   [ "drop *_*_*_*",
+         "keep mu2e::GenParticles_*_*_*",
+         "keep mu2e::GenEventCount_*_*_*",
+         "keep mu2e::StatusG4_*_*_*",
+         "keep *_g4run_*_*",
+         "drop uintmu2e::PhysicalVolumeInfomvstd::pairs_g4run_*_*",
+         "keep *_compressPVFull_*_*"
+      ]
+      fileName    : "sim.owner.s1-resampled-dsvacuum-truncated.version.sequencer.art"
+   }
+
+// Set output file names
+services.TFileService.fileName: "nts.owner.dsregion-resampled-dsvacuum.version.sequencer.root"
+outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.sequencer.art"
+
+//Specify Mu2e geometry
+services.GeometryService.simulatedDetector.tool_type : "Mu2e"
+
+//physics.filters.flashResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beam_0619_s2_planes/21461118.fcllist_1907121150/00/00001/sim.bbarton.beam-g4s2-crv.beams2_0619.002701_00000003.art"]
+
+//Contatenated filtered planes configuration
+physics.filters.flashResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/sim.bbarton.beam-g4s2-planes.beams2_0619.002701.art"]
+
