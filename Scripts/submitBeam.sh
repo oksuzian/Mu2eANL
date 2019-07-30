@@ -8,7 +8,7 @@ setup dhtools
 
 MAINDIR=`pwd`
 MAKEFLC=0
-STAGE=s3
+STAGE=planes_resample
 #MIXFILES="V703RegConc"
 MIXFILES="V703_07CB4"
 
@@ -17,8 +17,15 @@ if [ "$STAGE" == "s2" ]; then
 #    INLIST=prestage/sim.oksuzian.mu2eII-beam.g4s1-dsregion.txt
     INLIST=submissionLists/beams1_0619_dsregion_filelist.txt
   #  INFCL=/mu2e/app/users/oksuzian/Offlinev7_0_3/prestage/beam_g4s2_crv.fcl
-    INFCL=../oksuzian/Offlinev7_0_3/prestage/beam_g4s2_crv.fcl
-    TAG=1907061035
+  #  INFCL=../oksuzian/Offlinev7_0_3/prestage/beam_g4s2_crv.fcl #Used for 7/5 jobs
+    #INFCL=../oksuzian/Offline_cryAdjustableBox/beam_g4s2_crv.fcl #Used for
+    INFCL=../oksuzian/Offline_cryAdjustableBox/beam_g4s2_kl_planes_test.fcl #7/10 jobs with
+    TAG=1907261630
+elif [ "$STAGE" == "planes_resample" ]; then
+    #INLIST=submissionLists/planes_fileList.txt
+    #INFCL=../oksuzian/Offlinev7_5_1/Offline/S1-Resampler-dsvacuum.fcl
+    INFCL=S1-Resampler-dsvacuum.fcl
+    TAG=1907271030
 elif [ "$STAGE" == "s3" ]; then
     #INLIST=prestage/sim.mu2e.cd3-beam-g4s1-mubeam.051017.txt
     INLIST=submissionLists/beam_0619_stage3_fileList.txt
@@ -142,7 +149,8 @@ WFPROJ=beam_0619
 #Updated trhesholds
 #CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.8yiOBjc6Uh/Code.tar.bz
 #Deafault 0.7% without borated poly
-CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.OxBAJQZB7p/Code.tar.bz
+#CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.OxBAJQZB7p/Code.tar.bz
+CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.hWvzuUTdfq/Code.tar.bz
 OUTDIR=${DSCONF}_${TAG}
 
 if [ "$MAKEFLC" -eq 1 ]
@@ -155,7 +163,9 @@ OUTPNFS=/pnfs/mu2e/scratch/users/bbarton/workflow/${OUTDIR}/
 mkdir backup/$OUTDIR
 echo "Generating fcl files in: " backup/$OUTDIR
 if [ "$STAGE" == "s2" ] || [ "$STAGE" == "s3" ]; then
-    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=bbarton --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=10 --embed ${MAINDIR}/${INFCL})
+    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=bbarton --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=100 --embed ${MAINDIR}/${INFCL})
+elif [ "$STAGE" == "planes_resample" ]; then
+    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=bbarton --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --njobs=1 --events-per-job=2300000 --merge=27 --run=2705 --embed ${MAINDIR}/${INFCL})
 elif  [[ "$STAGE" == "concat"* ]]; then
     (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=600  --embed ${MAINDIR}/${INFCL})
 elif [ "$STAGE" == "s4dio" ] || [ "$STAGE" == "s4neu" ]; then
@@ -181,18 +191,19 @@ exit
 fi
 
 # Submit jobs on grid
-SF=backup/${OUTDIR}/fcllist.00
+#SF=backup/${OUTDIR}/fcllist.00
+SF=000/fcllist.00 #For test job of S1-Resampler-dsvacuum.fcl
 BN=`basename $SF | cut -d. -f 1`
 JN="${BN}_${TAG}"
 LN=logs/submit_${JN}.log
 
-RESOURCE="--disk=5GB --memory=1750MB"
+RESOURCE="--disk=20GB --memory=1750MB"
 if [ "$STAGE" == "mix" ]; then
     RESOURCE="--disk=20GB --memory=8GB"
 fi
 
 command="mu2eprodsys --clustername="${JN}" --fcllist=$SF --wfproject=$WFPROJ --dsconf=$DSCONF \
-   --dsowner=bbarton --OS=SL6 ${RESOURCE} --expected-lifetime=23h --code=$CODE \
+   --dsowner=bbarton --OS=SL7 ${RESOURCE} --expected-lifetime=23h --code=$CODE \
    --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC"
 echo "Submitting: " $command
 echo `$command` > $LN 2>&1
