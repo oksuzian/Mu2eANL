@@ -1,0 +1,154 @@
+// Re-sample dsregion stream particles from stage-1 outputs
+// Ben Barton, 2019
+// based off JobConfig/beam/DS-flash.fcl by Andrei Gaponenko, 2018
+
+#include "JobConfig/beam/prolog.fcl"
+
+process_name: DSVacuumResampler
+
+
+source: { module_type : EmptyEvent }
+services: { @table::mu2e.services.simServices }
+physics: { @table::mu2e.physics.g4s4Flash } 
+outputs: { @table::mu2e.outputs.g4s4Defs }
+
+//----------------------------------------------------------------
+// Mofidy setup for resampling the dsregion from s1 outputs
+
+// We should run genCounter for all EmptyEvent jobs.
+physics.producers.genCounter: {module_type: GenEventCounter }
+physics.analyzers.genCounterLogger: {module_type: GenEventCountReader}
+
+//Module to produce an NTuple of event data for easy viewing of outputs
+physics.analyzers.HitDumper : {
+   module_type: StepPointMC1stHitDumper
+   hitsInputTag: "g4run:DSVacuum"
+   TimeOffsets: {}
+}
+
+// Bring in info from the previous stage
+physics.filters.flashResample: {
+   module_type: ResamplingMixer
+   fileNames: @nil  
+   readMode: "sequential"
+   wrapFiles: true
+   mu2e: {
+      products: {
+	 genParticleMixer: { mixingMap: [ [ "generate", "" ] ] }
+	 simParticleMixer: { mixingMap: [ [ "crvFilter", ""] ] } 
+	 stepPointMCMixer: { mixingMap: [ [ "crvFilter:DSVacuum", ":" ] ] }
+      }
+   }
+}
+
+// Point Mu2eG4 to the pre-simulated data
+physics.producers.g4run.MultiStageParameters: {
+   simParticleNumberOffset: 200000 
+   genInputHits:  [ "flashResample:DSVacuum" ]
+   inputSimParticles: "flashResample"
+   inputMCTrajectories: ""
+   inputPhysVolumeMultiInfo: "" 
+}
+
+physics.producers.g4run.SDConfig.preSimulatedHits: []
+physics.producers.g4run.TrajectoryControl: @local::mu2eg4DefaultTrajectories
+mu2e.physics.producers.g4run.commonBase.physics: @local::mu2eg4DefaultPhysics
+
+//----------------------------------------------------------------
+// The final filter
+physics.filters.dsFilter: {
+         module_type: FilterG4Out
+	 noInstanceName : true
+         mainHitInputs : [ "flashResample:DSVacuum" ]
+         extraHitInputs : [ ]
+         numSimParticleCollections : 1
+         vetoDaughters: []
+}
+
+physics.filters.stepPointMomentumFilter: {
+        module_type: FilterStepPointMomentum
+        inputs : [ "flashResample:DSVacuum" ]
+        cutMomentumMin: 45. // MeV/c to accommodate muons decaying into electrons with a momentum of 80 MeV/c
+}
+
+physics.filters.trackerStepPointFilter : 
+      {
+         module_type : TrackerStepPointFilter 
+      }
+
+physics.filters.detectorFilter:
+      {
+         module_type: FilterG4Out
+	 noInstanceName : true
+         mainHitInputs: [ "g4run:tracker", "g4run:calorimeter", "g4run:calorimeterRO", "g4run:CRV" ]
+         extraHitInputs : [ "g4run:virtualdetector", "g4run:protonabsorber" ]
+         mcTrajectoryInputs : [ "g4run" ]
+         numSimParticleCollections : 1
+         vetoDaughters: []
+      }
+
+physics.filters.g4status: {
+         module_type: FilterStatusG4
+         input: "g4run"
+	 maxAcceptedStatus: 1  #  status 10 and above means StepPointMCCollection may have non-dereferencable pointers
+}
+
+physics.producers.compressPV : {
+         module_type: CompressPhysicalVolumes
+         volumesInput : "g4run"
+         hitInputs : []
+         particleInputs : [ "detectorFilter" ]
+}
+
+physics.producers.compressPVFull : {
+         module_type: CompressPhysicalVolumes
+         volumesInput : "g4run"
+         hitInputs : []
+         particleInputs : [ "g4run" ]
+}
+
+physics.trig: [genCounter, flashResample, g4run, g4consistent, stepPointMomentumFilter, dsFilter, trackerStepPointFilter, detectorFilter]
+#physics.trig: [flashResample, g4run, g4consistent, stepPointMomentumFilter, dsFilter, trackerStepPointFilter]
+#physics.g4StatusFilter : ["flashResample", "g4run", "!g4status", compressPVFull ]
+physics.g4StatusFilter : ["flashResample", "g4run", "!g4status"]
+physics.outputs: [truncatedEvtsOutput, DSVacuumOut]
+physics.an: [genCountLogger, HitDumper]
+physics.end_paths: [outputs, an]
+physics.trigger_paths: [trig, g4StatusFilter]
+
+outputs.DSVacuumOut : {
+      module_type : RootOutput
+      SelectEvents: ["trig"]
+      outputCommands:   [ 
+         "drop *_*_*_*",
+         "keep mu2e::GenParticles_*_*_*",
+         "keep mu2e::GenEventCount_*_*_*",
+         "keep mu2e::StatusG4_*_*_*",
+         "keep *_detectorFilter_*_*",
+         "keep *_compressPV_*_*"
+      ]
+      fileName    : "sim.owner.s1-resampled-dsvacuum.version.sequencer.art"
+   }
+
+outputs.truncatedEvtsOutput : {
+      module_type : RootOutput
+      SelectEvents: ["g4StatusFilter"]
+      outputCommands:   [ "drop *_*_*_*",
+         "keep mu2e::GenParticles_*_*_*",
+         "keep mu2e::GenEventCount_*_*_*",
+         "keep mu2e::StatusG4_*_*_*",
+         "keep *_g4run_*_*",
+         "drop uintmu2e::PhysicalVolumeInfomvstd::pairs_g4run_*_*",
+         "keep *_compressPVFull_*_*"
+      ]
+      fileName    : "sim.owner.s1-resampled-dsvacuum-truncated.version.sequencer.art"
+   }
+
+// Set output file names
+services.TFileService.fileName: "nts.owner.dsregion-resampled-dsvacuum.version.sequencer.root"
+outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.sequencer.art"
+
+//Specify Mu2e geometry
+services.GeometryService.simulatedDetector.tool_type : "Mu2e"
+
+physics.filters.flashResample.fileNames: ["/mu2e/data/users/oksuzian/sim.bbarton.beam-g4s2-crv.beams2_0619.002701.art"]
