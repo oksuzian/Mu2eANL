@@ -1,0 +1,43 @@
+#include "fcl/minimalMessageService.fcl"
+#include "fcl/standardProducers.fcl"
+#include "fcl/standardServices.fcl"
+#include "Users/neutronwg/fcl/prolog.fcl"
+# Give this job a name.
+process_name : crvCoincidenceTree
+
+# Read from an input file.
+source :
+{
+  module_type : RootInput
+}
+
+services :
+{
+  message               : @local::default_message
+
+  TFileService : 
+  {
+    fileName : "crv_hits.root"
+  }
+
+  GeometryService        : { inputFile      : "Mu2eG4/test/geom_01.txt" 	   }
+  ConditionsService      : { conditionsfile : "Mu2eG4/test/conditions_01.txt"      }
+  GlobalConstantsService : { inputFile      : "Mu2eG4/test/globalConstants_01.txt" }
+  G4Helper               : { }
+}
+
+physics :
+{
+  analyzers:
+  {
+    crvCoincidenceTree: @local::crvCoincidenceTree
+    genCountLogger: { module_type: GenEventCountReader }
+  }
+
+  p1 : []
+  e1 : [genCountLogger,crvCoincidenceTree]
+  trigger_paths  : [p1]
+  end_paths      : [e1]
+}
+
+services.GeometryService.inputFile :    "Mu2eG4/geom/geom_common_crv_v07.txt"

@@ -20,7 +20,7 @@ if [ "$STAGE" == "s2" ]; then
   #  INFCL=../oksuzian/Offlinev7_0_3/prestage/beam_g4s2_crv.fcl #Used for 7/5 jobs
     #INFCL=../oksuzian/Offline_cryAdjustableBox/beam_g4s2_crv.fcl #Used for
     INFCL=../oksuzian/Offline_cryAdjustableBox/beam_g4s2_kl_dsvacuum.fcl #7/10 jobs with
-    TAG=1907101500
+    TAG=1907121210
 elif [ "$STAGE" == "s3" ]; then
     #INLIST=prestage/sim.mu2e.cd3-beam-g4s1-mubeam.051017.txt
     INLIST=submissionLists/beam_0619_stage3_fileList.txt

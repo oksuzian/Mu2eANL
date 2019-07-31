@@ -6,7 +6,7 @@ setup mu2etools
 setup gridexport
 setup dhtools
 
-DSCONF=digi
+DSCONF=reco
 MAINDIR=`pwd`
 WFPROJ=CRY_MT2
 TAG=`date +"%y%m%d%H%M%S"`
@@ -19,7 +19,10 @@ LN=logs/submit_${JN}.log
 SETUPFN=./Offline/setup.sh
 INLIST=/mu2e/app/users/oksuzian/Offline_v7_2_0_CRYMT/cry_filelist.txt
 MERGE=10
-CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.OiWE4lHVkR/Code.tar.bz
+#CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.OiWE4lHVkR/Code.tar.bz
+#CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.TR3fgFpaBN/Code.tar.bz
+#CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.REmmWhdrw2/Code.tar.bz
+CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.4E9Y58PFqY/Code.tar.bz #Adds temporary bug fix for compressDigiMCs validation
 
 REPROCDIR=19374430.fcllist_190604094535
 INPATH=/pnfs/mu2e/scratch/users/bbarton/workflow/CRY_MT2/outstage/${REPROCDIR}/00/
@@ -36,7 +39,7 @@ submit_job () {
     RESOURCE="--disk=20GB --memory=5000MB"
 #    RESOURCE="--disk=10GB --memory=12000MB"
     command="mu2eprodsys --clustername="${JN}" --fcllist=$SF --wfproject=$WFPROJ --dsconf=$DSCONF \
-      --dsowner=bbarton --OS=SL6 ${RESOURCE} --expected-lifetime=23h --code=$CODE \
+      --dsowner=bbarton --OS=SL7 ${RESOURCE} --expected-lifetime=23h --code=$CODE \
       --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC"
     echo "Submitting: " $command
     echo `$command` > $LN 2>&1
@@ -61,15 +64,19 @@ elif [ "$DSCONF" == "digi" ]; then
     #INFCL=Offline/JobConfig/cosmic/cosmic_s3_general_cry.fcl
     INFCL=Offline/JobConfig/primary/CRY-offspill.fcl ##Updated fcl file as of 6/9/19
 #   INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry2_uniq.txt
-#   INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry1_concat.txt
-    INLIST=/mu2e/app/users/bbarton/submissionLists/cry2_digiList.txt
-    MERGE=500 #10 for CRY1 because they were already concatenated
+    #   INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/filelist_cry1.txt
+#    INLIST=/mu2e/app/users/bbarton/submissionLists/cry2_digiList_testBatch.txt
+    INLIST=/mu2e/app/users/bbarton/submissionLists/cry1_digiList.txt
+    MERGE=100 #100 for CRY1 because they were already concatenated
+#    MERGE=500 #cry2 configuration
 elif [ "$DSCONF" == "reco" ]; then
-    INFCL=Offline/JobConfig/reco/mcdigis_primary.fcl  #####This is useful for a purely cosmic CRY sample
+#    INFCL=Offline/JobConfig/reco/mcdigis_primary.fcl  #####This is useful for a purely cosmic CRY sample
     #INFCL=Offline/JobConfig/reco/mcdigis_CRY.fcl  ##This is useful for a mixed cry sample
-#    INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/cry_filelist_trkana_cry1_miss2.txt
-    INLIST=/mu2e/app/users/bbarton/submissionLists/cry1_RecoList.txt
-    MERGE=5
+     INFCL=Offline/JobConfig/reco/CRY-cosmic-general-mix.fcl #st_testBatch.txt
+#    INLIST=/mu2e/app/users/oksuzian/Offline_cryAdjustableBox/cr_testBatch.txt #filelist_trkana_cry1_miss2.txt
+#    INLIST=/mu2e/app/users/bbarton/submissionLists/cry2_digiList.txt
+    INLIST=/mu2e/app/users/bbarton/submissionLists/cry1_recoList_23July2019.txt
+    MERGE=5 #Was 5 but increased to 30 for dayabay reco
 
 elif [ "$DSCONF" == "rerun" ]; then
     #Locate directories of failed jobs

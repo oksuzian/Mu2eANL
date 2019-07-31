@@ -1,0 +1,41 @@
+BEGIN_PROLOG
+
+    crvHitAna:
+    {
+      module_type       	: CRVHitAna
+      volumeModuleLabel 	: "compressPVCRV"
+      processName		: ""
+      crvCoincidences   	: "CrvCoincidenceClusterSummarizer"
+      verboseLevel              : 1
+    }
+
+    crvPulseTree:
+    {
+      module_type       	: CRVPulseTree
+      volumeModuleLabel 	: "compressPVCRV"
+      processName		: ""
+      crvWaveformsModuleLabel   : "CrvWaveforms"
+      timeWindow 		: 100
+      peThresh			: 6
+      startTime 		: 575
+      endTime   		: 1750
+      leadingVetoTime   	: 0   
+      trailingVetoTime  	: 125 
+      verboseLevel              : 1
+    }
+
+    crvCoincidenceTree:{
+      module_type       	: CRVCoincidenceTree
+      crvCoincidences   	: [ "CrvCoincidenceClusterSummarizer" ]
+      timeWindow 		: 100
+      peThresh			: 6
+      startTime 		: 575
+      endTime   		: 1750
+      leadingVetoTime   	: 0
+      trailingVetoTime  	: 125
+      verboseLevel              : 1
+      timeOffsets               : { inputs : [ "protonTimeMap", "muonTimeMap" ] }
+    }   
+
+
+END_PROLOG
