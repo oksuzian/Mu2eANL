@@ -152,3 +152,4 @@ outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.se
 services.GeometryService.simulatedDetector.tool_type : "Mu2e"
 
 physics.filters.flashResample.fileNames: ["/mu2e/data/users/oksuzian/sim.bbarton.beam-g4s2-crv.beams2_0619.002701.art"]
+

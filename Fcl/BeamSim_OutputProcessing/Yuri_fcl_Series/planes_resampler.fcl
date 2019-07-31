@@ -148,31 +148,4 @@ physics.producers.g4run.TrajectoryControl: @local::mu2eg4DefaultTrajectories
 physics.producers.g4run.physics.noDecay: [130] // K-long lifetime to infinity
 
 //Contatenated filtered planes configuration
-physics.filters.flashResample.fileNames: [
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00000/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000000.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00001/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000003.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00002/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000004.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00003/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000005.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00004/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000008.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00005/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000009.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00006/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000010.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00007/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000013.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00008/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00000020.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00009/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001000.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00010/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001002.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00011/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001004.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00012/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001005.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00013/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001006.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00014/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001007.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00015/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001016.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00016/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001033.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00017/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001040.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00018/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001050.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00019/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00001067.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00020/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00049001.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00021/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00049002.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00022/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00049004.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00023/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00049005.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00024/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00049006.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00025/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00049010.art",
-"/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/00/00026/sim.bbarton.beam-g4s2-planes.beams2_0619.002701_00049030.art"]
+physics.filters.flashResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/sim.bbarton.beam-g4s2-planes.beams2_0619.002701.art"]
