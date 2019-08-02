@@ -65,7 +65,7 @@ void initializeHists(bool makeCuts)
   if (makeCuts)
      h_de_t0 = new TH1F("h_de_t0", "de.t0", 100, 500, 1700);
   else
-    h_de_t0 = new TH1F("h_de_t0", "de.t0", 100, 400, 1700);
+    h_de_t0 = new TH1F("h_de_t0", "de.t0", 100, 200, 1400);
   h_de_t0->SetXTitle("Time (ns)");
 
   //dequal.trkQualDeM - Track quality score of downstream electron track
@@ -267,6 +267,7 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   h_de_t0 = (TH1F*) gDirectory->Get("h_de_t0");
   canv->cd();
   h_de_t0->Draw();
+  h_de_t0->Fit("expo","","",500,1000);
   canv->SaveAs(("Beam/Klongs/de_t0" + cutIdentifier + filetype).c_str());
   logCanv->cd();
   h_de_t0->Draw();
