@@ -148,4 +148,7 @@ physics.producers.g4run.TrajectoryControl: @local::mu2eg4DefaultTrajectories
 physics.producers.g4run.physics.noDecay: [130] // K-long lifetime to infinity
 
 //Contatenated filtered planes configuration
+
+//physics.filters.flashResample.fileNames: ["/pnfs/mu2e/scratch/users/oksuzian/workflow/beam_0619/outstage/21168026.fcllist_190727225743/00/sim.bbarton.beam-g4s2-planes.beamplanes_filter_0619.002701.art"]
+
 physics.filters.flashResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beam_planes_filtered/sim.bbarton.beam-g4s2-planes.beams2_0619.002701.art"]

@@ -1,6 +1,6 @@
 #/bin/bash
-setup mu2e
-source Offline/setup.sh
+#setup mu2e
+#source Offline/setup.sh
 setup mu2egrid
 setup mu2etools
 setup gridexport
@@ -8,19 +8,20 @@ setup dhtools
 
 MAINDIR=`pwd`
 MAKEFLC=0
-STAGE=planes_resample
+STAGE=s2
 #MIXFILES="V703RegConc"
 MIXFILES="V703_07CB4"
 
 if [ "$STAGE" == "s2" ]; then
 #    INLIST=prestage/sim.mu2e.cd3-beam-g4s1-dsregion.051017.txt
 #    INLIST=prestage/sim.oksuzian.mu2eII-beam.g4s1-dsregion.txt
-    INLIST=submissionLists/beams1_0619_dsregion_filelist.txt
+    INLIST=../../submissionLists/beams1_0619_dsregion_filelist.txt
   #  INFCL=/mu2e/app/users/oksuzian/Offlinev7_0_3/prestage/beam_g4s2_crv.fcl
   #  INFCL=../oksuzian/Offlinev7_0_3/prestage/beam_g4s2_crv.fcl #Used for 7/5 jobs
     #INFCL=../oksuzian/Offline_cryAdjustableBox/beam_g4s2_crv.fcl #Used for
-    INFCL=../oksuzian/Offline_cryAdjustableBox/beam_g4s2_kl_planes_test.fcl #7/10 jobs with
-    TAG=1907261630
+    #INFCL=../oksuzian/Offline_cryAdjustableBox/beam_g4s2_kl_dsvacuum.fcl #7/10 jobs with
+    INFCL=../Fcl/BeamSim_OutputProcessing/beam_g4s2_kl_dsvacuum.fcl #08/02 jobs
+    TAG=1908021415
 elif [ "$STAGE" == "planes_resample" ]; then
     #INLIST=submissionLists/planes_fileList.txt
     #INFCL=../oksuzian/Offlinev7_5_1/Offline/S1-Resampler-dsvacuum.fcl
@@ -150,7 +151,8 @@ WFPROJ=beam_0619
 #CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.8yiOBjc6Uh/Code.tar.bz
 #Deafault 0.7% without borated poly
 #CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.OxBAJQZB7p/Code.tar.bz
-CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.hWvzuUTdfq/Code.tar.bz
+#CODE=/pnfs/mu2e/resilient/users/bbarton/gridexport/tmp.hWvzuUTdfq/Code.tar.bz
+CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.Z7BNyFuPp0/Code.tar.bz #Rerun non-sampled dsvacuum to try and replicate 8/02
 OUTDIR=${DSCONF}_${TAG}
 
 if [ "$MAKEFLC" -eq 1 ]
@@ -160,18 +162,18 @@ OUTDIR=${DSCONF}_${TAG}
 OUTPNFS=/pnfs/mu2e/scratch/users/bbarton/workflow/${OUTDIR}/
 
 # Generate fcl files
-mkdir backup/$OUTDIR
-echo "Generating fcl files in: " backup/$OUTDIR
+mkdir Backup/$OUTDIR
+echo "Generating fcl files in: " Backup/$OUTDIR
 if [ "$STAGE" == "s2" ] || [ "$STAGE" == "s3" ]; then
-    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=bbarton --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=100 --embed ${MAINDIR}/${INFCL})
+    (cd Backup/$OUTDIR && generate_fcl --desc=sim --dsowner=bbarton --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=100 --embed ${MAINDIR}/${INFCL})
 elif [ "$STAGE" == "planes_resample" ]; then
-    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=bbarton --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --njobs=1 --events-per-job=2300000 --merge=27 --run=2705 --embed ${MAINDIR}/${INFCL})
+    (cd Backup/$OUTDIR && generate_fcl --desc=sim --dsowner=bbarton --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --njobs=1 --events-per-job=2300000 --merge=27 --run=2705 --embed ${MAINDIR}/${INFCL})
 elif  [[ "$STAGE" == "concat"* ]]; then
-    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=600  --embed ${MAINDIR}/${INFCL})
+    (cd Backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=600  --embed ${MAINDIR}/${INFCL})
 elif [ "$STAGE" == "s4dio" ] || [ "$STAGE" == "s4neu" ]; then
-    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --events-per-job=200000 --njobs=500 --run=2700  --embed ${MAINDIR}/${INFCL})
+    (cd Backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --events-per-job=200000 --njobs=500 --run=2700  --embed ${MAINDIR}/${INFCL})
 elif [ "$STAGE" == "mix" ]; then
-    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --events-per-job=20 --njobs=50 --run=2700 ${INBG} --embed ${MAINDIR}/${INFCL})
+    (cd Backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --events-per-job=20 --njobs=50 --run=2700 ${INBG} --embed ${MAINDIR}/${INFCL})
     command="generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --events-per-job=20 --njobs=50 --run=2700 ${INBG} --embed ${MAINDIR}/${INFCL}"
     echo ${command}
 
@@ -181,21 +183,21 @@ else
 fi
 
 #Save enviroment variable
-printenv > backup/$OUTDIR/vars.txt 2>&1
+printenv > Backup/$OUTDIR/vars.txt 2>&1
 # Copy fcl files to pnfs area
 mkdir $OUTPNFS
-(for dir in backup/$OUTDIR/???; do ls $dir/*.fcl; done) | while read FF; do echo "Working on:" $FF; ifdh cp $FF $OUTPNFS; done
+(for dir in Backup/$OUTDIR/???; do ls $dir/*.fcl; done) | while read FF; do echo "Working on:" $FF; ifdh cp $FF $OUTPNFS; done
 #Make  fcl lists
-(for dir in $OUTPNFS; do ls $dir/*.fcl; done) | while read FF; do echo $FF; done | split -l 10000 -d - backup/$OUTDIR/fcllist.
+(for dir in $OUTPNFS; do ls $dir/*.fcl; done) | while read FF; do echo $FF; done | split -l 10000 -d - Backup/$OUTDIR/fcllist.
 exit
 fi
 
 # Submit jobs on grid
-#SF=backup/${OUTDIR}/fcllist.00
-SF=000/fcllist.00 #For test job of S1-Resampler-dsvacuum.fcl
+SF=Backup/${OUTDIR}/fcllist.00
+#SF=000/fcllist.00 #For test job of S1-Resampler-dsvacuum.fcl
 BN=`basename $SF | cut -d. -f 1`
 JN="${BN}_${TAG}"
-LN=logs/submit_${JN}.log
+LN=Logs/submit_${JN}.log
 
 RESOURCE="--disk=20GB --memory=1750MB"
 if [ "$STAGE" == "mix" ]; then
