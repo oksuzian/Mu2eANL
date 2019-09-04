@@ -13,9 +13,11 @@ physics: { @table::mu2e.physics.g4s4Flash }
 outputs: { @table::mu2e.outputs.g4s4Defs }
 
 //----------------------------------------------------------------
-// Mofidy setup for resampling the dsregion from s1 outputs
+// Mofidy setup fo	r resampling the dsregion from s1 outputs
 
 physics.producers.g4run.physics.NoDecay: [130] // K-long lifetime to infinity
+// FIX ME
+mu2eg4DefaultResourceLimits.maxSimParticleCollectionSize: 200000
 
 #physics.trigger_paths: [  ]
 #physics.out: [ detectorOutput ] 
@@ -26,9 +28,8 @@ physics.producers.genCounter: {module_type: GenEventCounter }
 //Module to produce an NTuple of event data for easy viewing of outputs
 physics.analyzers.HitDumper : {
    module_type: StepPointMC1stHitDumper
-   hitsInputTag: "g4run:DSVacuum"
+   hitsInputTag: "g4run:DSVacuum2"
    TimeOffsets: {}
-
 }
 
 // Bring in info from the previous stage
@@ -48,7 +49,7 @@ physics.filters.flashResample: {
 
 // Point Mu2eG4 to the pre-simulated data
 physics.producers.g4run.MultiStageParameters: {
-   simParticleNumberOffset: 300000 
+   simParticleNumberOffset: 200000 
    genInputHits:  [ "flashResample:DSVacuum" ]
    inputSimParticles: "flashResample"
    inputMCTrajectories: ""
@@ -70,80 +71,46 @@ physics.producers.g4run.MultiStageParameters: {
 ##Resample only K-longs and write to DSVacuum
 physics.producers.g4run.Mu2eG4CommonCut: {
    type: union
-   pars: [ {type: pdgId pars: [130]},
-   	   {type: inVolume 
+   pars: [  {type: inVolume 
 	    pars: [DS1Vacuum, DS2Vacuum, DS3Vacuum]
-	    write: DSVacuum} ]
+	    write: DSVacuum2} ]
 }
-
-
-
-
-
-
-physics.filters.dsPrefilter: {
-   module_type: FilterG4Out
-   noInstanceName : true
-#   mainHitInputs: [ "g4run:tracker", "g4run:calorimeter", "g4run:calorimeterRO", "g4run:CRV" ] //Use this line if want to include CRV hits
-#   mainHitInputs: [ "g4run:tracker", "g4run:calorimeter", "g4run:calorimeterRO"] //Use this line if only want detector hits inside DSVacuum
-   mainHitInputs: [ "g4run:DSVacuum"] // Use this line if only want hits in the volume DSVcuum, not its internal detector volumes
-#   extraHitInputs: [ "g4run:protonabsorber"]
-   extraHitInputs: []
-   numSimParticleCollections: 1
-}
-
 
 physics.producers.g4run.flash.SDConfig.preSimulatedHits: [""]
 mu2e.physics.producers.g4run.flash.SDConfig.preSimulatedHits:  [] ///////// This line doesn't do anything - had to change in prolog ????
 
-
-
-//----------------------------------------------------------------
-// Fix shower compressor config
-physics.producers.CaloShowerStepFromStepPt.physVolInfoInput: g4run
-physics.producers.CaloShowerStepFromStepPt.usePhysVolInfo: true
-physics.producers.CaloShowerStepFromStepPt.calorimeterStepPoints: "dsPrefilter:calorimeter" 
-physics.producers.CaloShowerStepFromStepPt.calorimeterROStepPoints: "dsPrefilter:calorimeterRO" 
-// The module needs to stop using getMany() and accept InputTags for configuration.
-// Until it is fixed, we have to use a hacked version.
-physics.producers.CaloShowerStepFromStepPt.module_type: CaloShowerStepFromStepPtHACKED
-
-
 //----------------------------------------------------------------
 // The final filter
-physics.filters.detectorFilter: {
-   module_type: "FilterG4Out"
-   noInstanceName: true
-   numSimParticleCollections: 1
-   mainHitInputs: ["dsPrefilter:DSVacuum"] # Use this if writing to DSVacuum stream, not detectors
-#   mainHitInputs: ["dsPrefilter:tracker" , "dsPrefilter:CRV"] //Use this line if you want to include CRV hits
-#   mainHitInputs: ["dsPrefilter:tracker"]  //Otherwise use this line
-   mainSPPtrInputs: ["CaloShowerStepFromStepPt"]
-   extraHitInputs: [ ]
-}
-
-physics.filters.crvFilter: {
+physics.filters.dsFilter: {
          module_type: FilterG4Out
 	 noInstanceName : true
-         mainHitInputs : [ "g4run:DSVacuum" ]
+         mainHitInputs : [ "g4run:DSVacuum2" ]
          extraHitInputs : [ ]
          numSimParticleCollections : 1
          vetoDaughters: []
 }
 
-// Add genCounter and dsRegionResample to the trigger path.
-physics.detPath: [ "genCounter", "flashResample", 
-   //need to remove compressPVDetector//  @sequence::physics.detPath
-   "g4run",
-   "g4consistent",
-   "HitDumper"
-]
+physics.filters.g4status: {
+         module_type: FilterStatusG4
+         input: "g4run"
+	 maxAcceptedStatus: 1  #  status 10 and above means StepPointMCCollection may have non-dereferencable pointers
+}
 
-physics.trig: ["flashResample","g4run","g4consistent"]
+
+physics.producers.compressPVFull : {
+         module_type: CompressPhysicalVolumes
+         volumesInput : "g4run"
+         hitInputs : []
+         particleInputs : [ "g4run" ]
+}
+
+physics.trig: ["flashResample","g4run", "g4consistent", "dsFilter"]
+#physics.g4StatusFilter : ["flashResample", "g4run", "!g4status", compressPVFull ]
+physics.g4StatusFilter : ["flashResample", "g4run", "!g4status"]
 physics.outputs: [truncatedEvtsOutput, DSVacuumOut]
-physics.an: ["genCounter",HitDumper]
+physics.an: ["genCounter", "HitDumper"]
 physics.end_paths: [outputs, an]
-physics.trigger_paths: [trig]
+physics.trigger_paths: [trig, g4StatusFilter]
 
 outputs.DSVacuumOut : {
       module_type : RootOutput
@@ -151,21 +118,24 @@ outputs.DSVacuumOut : {
       outputCommands:   [ "drop *_*_*_*",
          "keep mu2e::GenParticles_*_*_*",
          "keep mu2e::GenEventCount_*_*_*",
-         "keep mu2e::StatusG4_*_*_*"
+         "keep mu2e::StatusG4_*_*_*",
+         "keep *_dsFilter_*_*"
       ]
       fileName    : "sim.owner.s1-resampled-dsvacuum.version.sequencer.art"
    }
 
 outputs.truncatedEvtsOutput : {
       module_type : RootOutput
-      SelectEvents: ["trig"]
+      SelectEvents: ["g4StatusFilter"]
       outputCommands:   [ "drop *_*_*_*",
          "keep mu2e::GenParticles_*_*_*",
          "keep mu2e::GenEventCount_*_*_*",
          "keep mu2e::StatusG4_*_*_*",
-         "keep *_g4run_*_*"
+         "keep *_g4run_*_*",
+         "drop uintmu2e::PhysicalVolumeInfomvstd::pairs_g4run_*_*",
+         "keep *_compressPVFull_*_*"
       ]
-      fileName    : "sim.owner.beam-s1-resampled-dsvacuum.version.sequencer.art"
+      fileName    : "sim.owner.s1-resampled-dsvacuum-truncated.version.sequencer.art"
    }
 
 // Set output file names
@@ -175,4 +145,4 @@ outputs.detectorOutput.fileName: "sim.owner.dsregion-resampled-TrkCal.version.se
 //Specify Mu2e geometry
 services.GeometryService.simulatedDetector.tool_type : "Mu2e"
 
-physics.filters.flashResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beam_0619_s2_planes/21461118.fcllist_1907121150/00/00000/sim.bbarton.beam-g4s2-crv.beams2_0619.002701_00000000.art","/pnfs/mu2e/persistent/users/bbarton/beam_0619_s2_planes/21461118.fcllist_1907121150/00/00001/sim.bbarton.beam-g4s2-crv.beams2_0619.002701_00000003.art","/pnfs/mu2e/persistent/users/bbarton/beam_0619_s2_planes/21461118.fcllist_1907121150/00/00002/sim.bbarton.beam-g4s2-crv.beams2_0619.002701_00000004.art"]
+physics.filters.flashResample.fileNames: ["/pnfs/mu2e/persistent/users/bbarton/beam_0619_s2_planes/21461118.fcllist_1907121150/00/00001/sim.bbarton.beam-g4s2-crv.beams2_0619.002701_00000003.art"]

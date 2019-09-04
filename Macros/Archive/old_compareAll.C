@@ -9,24 +9,17 @@ TTree *tree_dby;
 //////////////////////////////////////////////////////////////    Define Cuts    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 //Signal cuts
-string momentum_cut = "deent.mom>100 && deent.mom<110 && ue.nhits<0"; 
-//string momentum_cut = "ue.nhits<0";
-string trk_cuts_MDC = "dequal.TrkQualDeM>0.8"; //For original CRY1 analysis this was 0.4
+string momentum_cut = "deent.mom>100 && deent.mom<110"; 
+string no_upstream = "ue.status<0";
+string trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
 string trk_cut_pid = "dequal.TrkPIDDeM>0.5";
-string pitch_angle  = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
-string min_trans_R  = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
-string max_trans_R  = "(demcent.d0+2.0/demcent.om)>450. && (demcent.d0+2.0/demcent.om)<680."; //  Inconsistent with hitting the proton absorber
-string timing_cut   = "de.t0>700 && de.t0<1600"; //unnecessary for unmixed samples
-string all_cuts_MDC = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string all_cuts_MDC_pid = momentum_cut + "&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid;
-string all_cuts_MDC_mixed = all_cuts_MDC + "&&" + timing_cut;
-string all_cuts_MDC_pid_mixed = all_cuts_MDC_pid + "&&" + timing_cut;
-string expandedMomentum = "ue.nhits<0&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid;
-
-//Alternative cuts
-string d0is0 = "demcent.d0==0";
-string noMomNoPID = trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
-string testCut = "ue.nhits<0&&" + trk_cuts_MDC + "&&" + pitch_angle + "&&" + min_trans_R;
+string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
+string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
+string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
+string timing_cut = "de.t0>700 && de.t0<1600"; // Official cuts 1695 upper threshold
+string all_cuts_MDC = momentum_cut + "&&" + no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R;
+string signalCuts = all_cuts_MDC + "&&" + trk_cut_pid + "&&" + timing_cut;
+string noMom = no_upstream + "&&" + trk_qual + "&&" + pitch_angle + "&&" + min_trans_R + "&&" + max_trans_R + "&&" + trk_cut_pid; 
 
 
 /**********************************************************************************************************************************************************************************/
@@ -39,9 +32,9 @@ void makePlots(std::string variable, string xTitle, int cut_version=0){
 
   TCut cuts;
   if (cut_version == 1) //Signal cuts
-    cuts = TCut(all_cuts_MDC_pid.c_str());
+    cuts = TCut(signalCuts.c_str());
   else if (cut_version == 2) //Expanded momentum window
-    cuts = TCut(expandedMomentum.c_str());    
+    cuts = TCut(noMom.c_str());    
   else //No cuts by default
     cuts = "";
     
@@ -111,9 +104,9 @@ void makePlots(std::string variable, string xTitle, int cut_version=0){
   leg->AddEntry(hCRY2,Form("CRY-2: %d", (int)hCRY2->GetEntries()),"l");
   leg->AddEntry(hCRY1,Form("CRY-1: %d", (int)hCRY1->GetEntries()),"l");
   leg->AddEntry(hDBY,Form("DBY: %d", (int)hDBY->GetEntries()),"l");
-  leg->Draw("same");w
+  leg->Draw("same");
 
-  wwstd::string plot_name;
+  std::string plot_name;
   plot_name.reserve(variable.size());
   for(size_t i = 0; i < variable.size(); ++i)
     {
@@ -143,7 +136,7 @@ void makePlots(std::string variable, string xTitle, int cut_version=0){
 /**********************************************************************************************************************************************************************************/
 /////////////////////////////////////////////////////////////   Make All Plots    //////////////////////////////////////////////////////////////////////////////////////////////////
 
-void compareAll(){
+void old_compareAll(){
   TFile file_cry1("/mu2e/data/users/bbarton/CRY1/TrkAnaTrees/cry1_unmixedTrkAna.root");
   TFile file_cry2("/mu2e/data/users/bbarton/CRY2/TrkAnaTrees/cry2_trkana.root");
   TFile file_dby("/mu2e/data/users/bbarton/DBY/TrkAnaTrees/dby_trkana.root");

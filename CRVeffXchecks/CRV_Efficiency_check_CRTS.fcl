@@ -1,0 +1,216 @@
+#include "fcl/minimalMessageService.fcl"
+#include "fcl/standardServices.fcl"
+#include "Mu2eG4/fcl/prolog.fcl"
+#include "CRVResponse/fcl/prolog_v07.fcl"
+#include "Users/neutronwg/fcl/prolog.fcl"
+
+BEGIN_PROLOG
+
+outsideCrvCutTX: 
+{
+   type: union  //cut all tracks leaving to the side of the CRV
+   pars: 
+   [
+      // +x plane
+      { 
+        type  : plane 
+        normal: [  1, 0, 0    ] 
+        point : [ -1904, 0, 0 ] 
+      },
+      // -x plane
+      { 
+        type  : plane 
+        normal: [ -1, 0, 0    ] 
+        point : [ -2404, 0, 0 ] 
+      }
+   ]
+}
+
+outsideCrvCutTZ: 
+{ 
+   type: union  //cut all tracks leaving to the side of the CRV
+   pars: 
+   [
+      // +x plane
+      { 
+        type  : plane 
+        normal: [  0, 0,  1  ]
+        point : [  0, 0, 4150] 
+      },
+      // -x plane
+      { 
+        type  : plane 
+        normal: [ 0, 0, -1   ] 
+        point : [ 0, 0, 3050 ] 
+      }
+   ]
+}
+
+//====================================================
+
+belowCrvCutT:
+{
+   type: intersection
+   pars:
+   [
+      { 
+        type  : plane            //cut all tracks exiting below the CRV
+                                 //since the "plane check" is inside an intersect, the next check will be done for all tracks exiting below the CRV
+        normal: [ 0, -1, 0 ] 
+        point : [ 0, 2653.31, 0 ]
+      },
+      {
+        type: union              //the union (in combination with the "constant" below) makes sure that this will always return true
+                                 //so that all tracks exiting below the CRV will be cut
+                                 //however, it also makes sure that the pdgId test will be performed for all tracks exiting below the CRV
+        pars:
+        [
+          {
+            type : pdgId         //if the track which exits below the CRV is a muon, then it will be written to the "belowCRV"
+            pars : [ 13, -13 ] 
+            write: belowCrv
+          },
+          {
+            type : constant
+            value: true
+          }
+        ]
+      }
+   ]
+}
+
+
+
+
+
+//====================================================
+
+CrvCoincidenceT: @local::CrvCoincidence
+CrvCoincidenceT.verboseLevel                  : 0
+CrvCoincidenceT.CRVSectors                    : ["Test"]
+CrvCoincidenceT.adjacentPulseTimeDifferences  : [   5  ]
+CrvCoincidenceT.useFourLayers                 : [ false]
+CrvCoincidenceT.muonsOnly                     : true
+CrvCoincidenceT.muonMinTime                   :  20.0  //ns
+CrvCoincidenceT.muonMaxTime                   : 150.0  //ns
+CrvCoincidenceT.genParticleModuleLabel        : "generate" 
+
+
+CrvCoincidence  : @local::CrvCoincidenceT  //REPLACE
+
+END_PROLOG
+
+
+process_name : CRVEfficiency
+
+source :
+{
+  module_type : EmptyEvent
+  maxEvents : @nil
+}
+
+services :
+{
+  message               : @local::default_message
+  TFileService          : { fileName : "nts.owner.crv-efficiency-18PE-5mm.version.sequencer.root" }
+  RandomNumberGenerator : { }
+
+  GeometryService        : { inputFile      : "CRVResponse/efficiencyCheck/geom_T.txt" }  //REPLACE
+  ConditionsService      : { conditionsfile : "Mu2eG4/test/conditions_01.txt" }
+  GlobalConstantsService : { inputFile      : "Mu2eG4/test/globalConstants_01.txt" }
+  G4Helper               : { }
+  SeedService            : @local::automaticSeeds
+}
+
+physics :
+{
+  producers:
+  {
+    generate: 
+    {
+       module_type          : EventGenerator
+       inputfile            : "CRVResponse/efficiencyCheck/genconfig_T.txt"    //REPLACE
+    }
+
+    g4run : 
+    {
+       module_type: Mu2eG4
+       physics: @local::mu2eg4DefaultPhysics
+       ResourceLimits: @local::mu2eg4DefaultResourceLimits
+       TrajectoryControl: @local::mu2eg4DefaultTrajectories 
+       debug: @local::mu2eg4DefaultDebug
+       visualization: @local::mu2eg4NoVisualization
+
+       generatorModuleLabel: generate
+       MultiStageParameters: {} // this is the first stage
+
+       SDConfig: 
+       {
+            enableSD: [ CRV ] 
+            sensitiveVolumes: []
+            TimeVD: { times: [] }
+       }
+
+       Mu2eG4StackingOnlyCut: @local::mu2eg4CutNeutrinos
+
+       Mu2eG4SteppingOnlyCut: {}
+
+       Mu2eG4CommonCut: 
+       {
+         type: union
+         pars: [@local::outsideCrvCutTX, @local::outsideCrvCutTZ, @local::belowCrvCutT]  //REPLACE
+       }
+    }
+
+    CrvPhotons       : @local::CrvPhotons
+    CrvSiPMCharges   : @local::CrvSiPMCharges
+    CrvWaveforms     : @local::CrvWaveforms
+    CrvDigi          : @local::CrvDigi
+    CrvRecoPulses    : @local::CrvRecoPulses   
+    CrvCoincidence   : @local::CrvCoincidence
+    CrvCoincidenceClusterFinder : @local::CrvCoincidenceClusterFinder
+    CrvCoincidenceClusterSummarizer : @local::CrvCoincidenceClusterSummarizer
+  }
+  filters: 
+  {
+    belowCrvFilter: 
+    {
+      module_type: FilterStepPointMomentum
+      inputs : [ "g4run:belowCrv" ]
+      cutMomentumMin: 0. // momentum is irrelevant, the only requirement is that the muon exits below the CRV counter
+    }
+  }
+
+  analyzers: {
+     crvHitAna: @local::crvHitAna
+   }
+
+  trig : [generate, g4run, belowCrvFilter, CrvPhotons, CrvSiPMCharges, CrvWaveforms, CrvDigi, CrvRecoPulses, CrvCoincidence, CrvCoincidenceClusterFinder, CrvCoincidenceClusterSummarizer]
+  e1   : [crvHitAna]
+
+  trigger_paths  : [trig]
+  out: []
+  end_paths: [e1]
+
+}
+
+outputs: 
+{
+  Output : 
+  {
+    module_type : RootOutput
+    fileName    : "sim.owner.effcheck.version.sequencer.art"
+  }
+}
+
+
+physics.producers.CrvPhotons.timeOffsets    : { inputs : [] }
+physics.producers.CrvPhotons.g4ModuleLabels : ["*"]
+physics.producers.CrvPhotons.processNames   : ["*"]
+physics.producers.CrvPhotons.lookupTableFileNames : ["CRVConditions/v4_1/LookupTable_6000_0"]  //REPLACE
+physics.producers.CrvPhotons.CRVSectors           : ["Test"]
+physics.producers.CrvCoincidence.PEthresholds                   : [18]
+physics.producers.CrvCoincidence.maxTimeDifferences             : [10]
+physics.producers.CrvCoincidenceClusterFinder.verboseLevel: 0
+#services.SeedService.baseSeed         :  773651
+#services.SeedService.maxUniqueEngines :  20
