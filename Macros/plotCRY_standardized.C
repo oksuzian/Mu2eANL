@@ -427,6 +427,9 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
       cout << "e+ background events" << endl;
       tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "(demc.pdg)==-11","");
 
+      cout << "e- background events" << endl;
+      tree->Scan("evtinfo.subrunid:evtinfo.eventid:demc.pdg",cuts + "(demc.pdg)==11","");
+
       cout <<"\n" << endl;
     }
   else 
@@ -859,7 +862,8 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
     pdgSign = "-";
 
   canv->cd();
-  tree->Draw("demc.oposx:demc.oposz",("demc.pdg=="+pdgSign+"11").c_str());
+  //  tree->Draw("demc.oposx:demc.oposz",("demc.pdg=="+pdgSign+"11").c_str());
+  tree->Draw("demc.oposx:demc.oposz",cuts);
   g_oposx_vs_oposz = (TGraph*) gPad->GetPrimitive("Graph");
   g_oposx_vs_oposz->SetTitle("Reconstructed e^- : Origin Position;z position (mm);x position (mm)");
   canv->Update();
@@ -868,15 +872,18 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   
   //y:z position of the electron/positron
   canv->cd();
-  tree->Draw("demc.oposy:demc.oposz",("demc.pdg=="+pdgSign+"11").c_str());
+  //  tree->Draw("demc.oposy:demc.oposz",("demc.pdg=="+pdgSign+"11").c_str());
+  tree->Draw("demc.oposy:demc.oposz",cuts);
   g_oposy_vs_oposz = (TGraph*) gPad->GetPrimitive("Graph");
   g_oposy_vs_oposz->SetTitle("Reconstructed e^- : Origin Position;z position (mm);y position (mm)");
   canv->Update();
   canv->SaveAs(("standardizedPlots/demc_oposy_vs_oposz" + cutIdentifier + filetype).c_str());
-  
+  std::cout << "Number of entries: " << g_oposy_vs_oposz->GetN() << std::endl;
+
   //y:x position of the electron/positron
   canv->cd();
-  tree->Draw("demc.oposy:demc.oposx",("demc.pdg=="+pdgSign+"11").c_str());
+  //  tree->Draw("demc.oposy:demc.oposx",("demc.pdg=="+pdgSign+"11").c_str());
+  tree->Draw("demc.oposy:demc.oposx",cuts);
   g_oposy_vs_oposx = (TGraph*) gPad->GetPrimitive("Graph");
   g_oposy_vs_oposx->SetTitle("Reconstructed e^- : Origin Position;x position (mm);y position (mm)");
   canv->Update();
