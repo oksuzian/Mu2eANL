@@ -21,12 +21,6 @@
 #include <string>
 
 /*********************************************************************************************************************************************************/
-////////////////////////////////////////////////////////   Control Params    //////////////////////////////////////////////////////////////////////////////
-
-static bool INC_TRKQUAL_SFX = false; //Prior to mid-July, dequal leaves were named with suffixes - set to true to read trees prior to this date
-
-
-/*********************************************************************************************************************************************************/
 ///////////////////////////////////////////////////    Define Standard Histograms & Graphs    /////////////////////////////////////////////////////////////
 
 TH1F *h_crvinfomc_x0;
@@ -168,22 +162,13 @@ void initializeHists(bool makeCuts)
   h_de_t0->SetXTitle("Time (ns)");
 
   //dequal.trkQualDeM - Track quality score of downstream electron track
-  if (INC_TRKQUAL_SFX)
-    {
-      if (makeCuts)
-	h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "dequal.TrkQualDeM", 100, 0.4, 1);
-      else
-	h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "dequal.TrkQualDeM", 100, 0, 1);
-      h_dequal_trkQualDeM->SetXTitle("Track Quality");
-    }
+
+  if (makeCuts)
+    h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "detrkqual.mvaout", 100, 0.4, 1);
   else
-    {
-      if (makeCuts)
-	h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "dequal.TrkQual", 100, 0.4, 1);
-      else
-	h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "dequal.TrkQual", 100, 0, 1);
-      h_dequal_trkQualDeM->SetXTitle("Track Quality");
-    }
+    h_dequal_trkQualDeM = new TH1F("h_dequal_trkQualDeM", "detrkqual.mvaout", 100, 0, 1);
+  h_dequal_trkQualDeM->SetXTitle("Track Quality");
+    
 
   //demcent.d0 - MC truth downstream electron distance at tracker entrance
   if (makeCuts)
@@ -329,16 +314,10 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   string no_upstream = "ue.status<0";
   string trk_qual;
   string trk_cut_pid;
-  if (INC_TRKQUAL_SFX)
-    {
-      trk_qual = "dequal.TrkQualDeM>0.8";; //For original CRY1 analysis this was 0.4
-      trk_cut_pid = "dequal.TrkPIDDeM>0.9";
-    }
-  else
-    {
-      trk_qual = "dequal.TrkQual>0.8";; //For original CRY1 analysis this was 0.4
-      trk_cut_pid = "dequal.TrkPID>0.9";
-    }
+
+  trk_qual = "detrkqual.mvaout>0.8";; //For original CRY1 analysis this was 0.4
+  trk_cut_pid = "detrkpid.mvaout>0.9";
+
   string pitch_angle = "deent.td>0.57735027 && deent.td<1"; //  Excludes beam particles
   string min_trans_R = "deent.d0>-80 && deent.d0<105"; //  Consistent with coming from the target
   string max_trans_R = "(deent.d0+2.0/deent.om)>450. && (deent.d0+2.0/deent.om)<680."; //  Inconsistent with hitting the proton absorber
@@ -672,29 +651,16 @@ void makeStandardizedPlots(string treePath, bool neg, bool makeCuts, bool useMom
   h_de_t0->Draw();
   logCanv->SaveAs(("standardizedPlots/de_t0_logY" + cutIdentifier + filetype).c_str());
 
-  //dequal.TrkQualDeM or dequal.TrkQual
-  if (INC_TRKQUAL_SFX)
-    {
-      tree->Draw("dequal.TrkQualDeM>>+h_dequal_trkQualDeM",cuts, "goff");
-      h_dequal_trkQualDeM = (TH1F*) gDirectory->Get("h_dequal_trkQualDeM");
-      canv->cd();
-      h_dequal_trkQualDeM->Draw();
-      canv->SaveAs(("standardizedPlots/dequal_trkQualDeM" + cutIdentifier + filetype).c_str());
-      logCanv->cd();
-      h_dequal_trkQualDeM->Draw();
-      logCanv->SaveAs(("standardizedPlots/dequal_trkQualDeM_logY" + cutIdentifier + filetype).c_str());
-    }
-  else
-    {
-      tree->Draw("dequal.TrkQual>>+h_dequal_trkQualDeM",cuts, "goff");
-      h_dequal_trkQualDeM = (TH1F*) gDirectory->Get("h_dequal_trkQualDeM");
-      canv->cd();
-      h_dequal_trkQualDeM->Draw();
-      canv->SaveAs(("standardizedPlots/dequal_trkQual" + cutIdentifier + filetype).c_str());
-      logCanv->cd();
-      h_dequal_trkQualDeM->Draw();
-      logCanv->SaveAs(("standardizedPlots/dequal_trkQual_logY" + cutIdentifier + filetype).c_str());
-    }
+  //detrkqual.mvaout or detrkqual.mvaout
+
+  tree->Draw("detrkqual.mvaout>>+h_dequal_trkQual",cuts, "goff");
+  h_dequal_trkQualDeM = (TH1F*) gDirectory->Get("h_dequal_trkQual");
+  canv->cd();
+  h_dequal_trkQualDeM->Draw();
+  canv->SaveAs(("standardizedPlots/dequal_trkQual" + cutIdentifier + filetype).c_str());
+  logCanv->cd();
+  h_dequal_trkQualDeM->Draw();
+  logCanv->SaveAs(("standardizedPlots/dequal_trkQual_logY" + cutIdentifier + filetype).c_str());
 
   //demcent.d0
   tree->Draw("demcent.d0>>+h_demcent_d0",cuts, "goff");

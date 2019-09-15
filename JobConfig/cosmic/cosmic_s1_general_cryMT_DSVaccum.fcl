@@ -1,4 +1,4 @@
-#include "../Mu2eANL/JobConfig/cosmic/cosmic_defs_s1.fclinc"
+#include "Mu2eANL/JobConfig/cosmic/cosmic_defs_s1.fclinc"
 
 physics.producers.generate.inputFile    : "EventGenerator/defaultConfigs/defaultCRYconfig.txt"
 physics.producers.generate.module_type  : CRYEventGeneratorN

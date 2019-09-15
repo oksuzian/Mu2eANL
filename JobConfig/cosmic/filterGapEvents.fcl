@@ -8,7 +8,7 @@
 #include "Mu2eG4/fcl/prolog.fcl"
 
 # Give this job a name.
-process_name :  PlanesAnalyzer
+process_name : filterGapEvents
 
 source : {
    module_type : RootInput
@@ -16,9 +16,8 @@ source : {
 
 services : {
    message               : @local::default_message
-   TFileService          : { fileName : "nts.owner.filtered-planes.version.sequencer.root" }
+   TFileService          : { fileName : "nts.owner.filtered-minedep.version.sequencer.root" }
    RandomNumberGenerator : { }
-
    GeometryService        : { inputFile      : "Mu2eG4/geom/geom_common_crv_v07.txt" }
    ConditionsService      : { conditionsfile : "Mu2eG4/test/conditions_01.txt"      }
    GlobalConstantsService : { inputFile      : "Mu2eG4/test/globalConstants_01.txt" }
@@ -27,22 +26,34 @@ services : {
 }
 
 physics : {
-   analyzers: {
-      genCountLogger: {
-         module_type: GenEventCountReader
-      }
-    HitDumper: {
-        module_type : StepPointMC1stHitDumper
-//        hitsInputTag: "dsRegionFilter:dsregion"
-//        hitsInputTag: "dsFilter:DSVacuum"
-//        hitsInputTag: "compressDigiMCs:virtualdetector"
-        hitsInputTag: "cosmicFilter:crvStage1"
-//        hitsInputTag: "g4run:tracker"
-        TimeOffsets : { }
-      }
+   filters: {
+	filterEdepCRV: {
+        module_type: FilterMinEdepCRV
+        inputs : [ "cosmicFilter:CRV" ]
+	cutEDepMin: 0
+	cutEDepMax: 10
+   	}
+
+        filterLowEnergy: {
+        module_type: FilterStepPointKinEnPDG
+        inputs : [ "cosmicFilter:crvStage1" ]
+        cutKEmin:  [ 10.,  10., 50, 50,  50 ] // drop particles that can't produce KL0 
+        pdgToDrop: [2112, 2212, 22, 11, -11 ] // drop particles PDGs
+        }
    }
-   an: [ genCountLogger, HitDumper ]
-   end_paths: [an]
+   trig: [filterEdepCRV, filterLowEnergy]
+   outputs: [dsout]
+   end_paths: [outputs]
+   trigger_paths: [trig]
+}
+
+outputs: {
+   dsout : {
+      module_type :  RootOutput
+      SelectEvents:  ["trig"]
+      outputCommands:["keep *_*_*_*"]
+      fileName    : "sim.owner.minedep-filter.version.sequencer.art"
+   }
 }
 
 // Limit the amount of "Begin processing the ... record" messages

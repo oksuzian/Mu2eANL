@@ -6,10 +6,10 @@
 
 process_name: DSvacuumResampler
 
-source: { module_type : EmptyEvent }
+source:   { module_type : EmptyEvent }
 services: { @table::mu2e.services.simServices }
-physics: { @table::mu2e.physics.g4s4Flash } 
-outputs: { @table::mu2e.outputs.g4s4Defs }
+physics:  { @table::mu2e.physics.g4s4Flash } 
+outputs:  { @table::mu2e.outputs.g4s4Defs }
 
 //----------------------------------------------------------------
 // Mofidy setup for resampling the dsregion from s1 outputs
@@ -42,7 +42,7 @@ physics.filters.dsResample: {
 
 // Point Mu2eG4 to the pre-simulated data
 physics.producers.g4run.MultiStageParameters: {
-   simParticleNumberOffset: 100000 
+   simParticleNumberOffset: 300000 
    genInputHits:  [ "dsResample:crvStage1" ]
    inputSimParticles: "dsResample"
    inputMCTrajectories: ""
@@ -104,7 +104,7 @@ physics.producers.compressPVFull : {
 }
 
 physics.trig: [genCounter, dsResample, g4run, g4consistent, stepPointMomentumFilter, dsFilter, trackerStepPointFilter, detectorFilter]
-//physics.g4StatusFilter : [dsResample, g4run, "!g4status", compressPVFull ]
+#physics.g4StatusFilter : [dsResample, g4run, "!g4status", compressPVFull ]
 physics.g4StatusFilter : [dsResample, g4run, "!g4status"]
 physics.outputs: [truncatedEvtsOutput, DSVacuumOut]
 physics.an: [genCountLogger, HitDumper]
@@ -147,7 +147,17 @@ services.TFileService.fileName: "nts.owner.dsregion-resampled-dsvacuum.version.s
 services.GeometryService.simulatedDetector.tool_type : "Mu2e"
 physics.producers.g4run.SDConfig.preSimulatedHits: []
 physics.producers.g4run.TrajectoryControl: @local::mu2eg4DefaultTrajectories
-physics.producers.g4run.Mu2eG4CommonCut:{type: inVolume pars: [ worldDirtBottom ]}
+//	type: inVolume pars: [ worldDirtBottom ]
+physics.producers.g4run.Mu2eG4CommonCut:{
+	type: intersection
+	pars: [
+	{type: notInVolume 
+	pars: [ TS5CryoInsVac, TS5Vacuum, Coll51, DS1Vacuum, DS2Vacuum, DS3Vacuum ]},
+	{type: intersection
+	pars: [ { type: kineticEnergy cut: 10 }, { type: pdgId pars: [ 2112, 22, 11, -11 ] }]}
+	]
+}
+physics.producers.g4run.ResourceLimits.maxSimParticleCollectionSize: 1000000
 
-physics.filters.dsResample.fileNames: ["/mu2e/data/users/oksuzian/sim.owner.cosmic-g4s1s2-crygeneral.version.sequencer.art"]
-//physics.filters.dsResample.fileNames: ["/pnfs/mu2e/scratch/users/oksuzian/workflow/beam_0619/outstage/22148723.fcllist_190801102925/00/sim.bbarton.s1-resampled-dsvacuum.beamplanes_resampler_0619.190801102925.art"]
+//physics.filters.dsResample.fileNames: ["/pnfs/mu2e/scratch/users/oksuzian/workflow/cry_0919/outstage/22979822.fcllist_190907134344/00/sim.oksuzian.minedep-filter.cryminedep_filter_0919.2701.art"]
+physics.filters.dsResample.fileNames: ["/pnfs/mu2e/scratch/users/oksuzian/workflow/cry_0919/outstage/23774693.fcllist_190911085549/00/sim.oksuzian.minedep-filter.cryminedep_filter_0919.2701.art"]
