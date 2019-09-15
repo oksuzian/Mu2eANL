@@ -50,7 +50,7 @@ fi
 DSCONF=cry${STAGE}_0919
 SETUPFN=${MU2E_BASE_RELEASE}/setup.sh
 WFPROJ=cry_0919
-CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.VmnM4jYMtD/Code.tar.bz
+CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.FYoNdjAD7Q/Code.tar.bz
 
 OUTDIR=${DSCONF}_${TAG}
 

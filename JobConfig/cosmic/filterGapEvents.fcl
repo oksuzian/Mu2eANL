@@ -28,7 +28,7 @@ services : {
 physics : {
    filters: {
 	filterEdepCRV: {
-        module_type: FilterMinEdepCRV
+        module_type: FilterMinEdep
         inputs : [ "cosmicFilter:CRV" ]
 	cutEDepMin: 0
 	cutEDepMax: 10
@@ -41,7 +41,7 @@ physics : {
         pdgToDrop: [2112, 2212, 22, 11, -11 ] // drop particles PDGs
         }
    }
-   trig: [filterEdepCRV, filterLowEnergy]
+   trig: [filterEdep, filterLowEnergy]
    outputs: [dsout]
    end_paths: [outputs]
    trigger_paths: [trig]

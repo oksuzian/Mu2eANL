@@ -105,7 +105,7 @@ physics.producers.compressPVFull : {
 
 physics.trig: [genCounter, dsResample, g4run, g4consistent, stepPointMomentumFilter, dsFilter, trackerStepPointFilter, detectorFilter]
 #physics.g4StatusFilter : [dsResample, g4run, "!g4status", compressPVFull ]
-physics.g4StatusFilter : [dsResample, g4run, "!g4status"]
+physics.g4StatusFilter : [dsResample, g4run, "!g4status", compressPVFull]
 physics.outputs: [truncatedEvtsOutput, DSVacuumOut]
 physics.an: [genCountLogger, HitDumper]
 physics.end_paths: [outputs, an]
@@ -157,7 +157,7 @@ physics.producers.g4run.Mu2eG4CommonCut:{
 	pars: [ { type: kineticEnergy cut: 10 }, { type: pdgId pars: [ 2112, 22, 11, -11 ] }]}
 	]
 }
-physics.producers.g4run.ResourceLimits.maxSimParticleCollectionSize: 1000000
+//physics.producers.g4run.ResourceLimits.maxSimParticleCollectionSize: 1000000
 
 //physics.filters.dsResample.fileNames: ["/pnfs/mu2e/scratch/users/oksuzian/workflow/cry_0919/outstage/22979822.fcllist_190907134344/00/sim.oksuzian.minedep-filter.cryminedep_filter_0919.2701.art"]
 physics.filters.dsResample.fileNames: ["/pnfs/mu2e/scratch/users/oksuzian/workflow/cry_0919/outstage/23774693.fcllist_190911085549/00/sim.oksuzian.minedep-filter.cryminedep_filter_0919.2701.art"]

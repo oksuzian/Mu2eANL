@@ -57,7 +57,8 @@ namespace mu2e {
 
   //================================================================
   FilterStepPointKinEnPDG::FilterStepPointKinEnPDG(const fhicl::ParameterSet& pset)
-    : cutKEmin_(pset.get<std::vector<double> >("cutKEmin", std::vector<double>())   )
+    : art::EDFilter{pset}
+    , cutKEmin_(pset.get<std::vector<double> >("cutKEmin", std::vector<double>()))
     , numInputEvents_(0)
     , numPassedEvents_(0)
   {
