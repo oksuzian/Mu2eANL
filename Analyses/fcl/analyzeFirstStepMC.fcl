@@ -8,7 +8,7 @@
 #include "Mu2eG4/fcl/prolog.fcl"
 
 # Give this job a name.
-process_name :  PlanesAnalyzer
+process_name : AnalyzeFirstStepMC
 
 source : {
    module_type : RootInput
