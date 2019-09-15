@@ -1,12 +1,12 @@
-#include "../Mu2eANL/JobConfig/cosmic/cosmic_defs_s1.fclinc"
+#include "Mu2eANL/JobConfig/cosmic/cosmic_defs_s1.fclinc"
 
 physics.producers.generate.inputFile    : "EventGenerator/defaultConfigs/defaultCRYconfig.txt"
 physics.producers.generate.module_type  : CRYEventGeneratorN
 physics.producers.generate.stashSize    : 1000
-physics.producers.g4run.runinMTMode     : true
-physics.producers.g4run.numberOfThreads : 4
+physics.producers.g4run.runinMTMode     : false
+physics.producers.g4run.numberOfThreads : 1
 
-physics.producers.g4run.G4InteralFiltering   : false
+physics.producers.g4run.G4InteralFiltering  : false
 physics.producers.g4run.errorOnFailureToPut : false
 services.GeometryService.simulatedDetector.tool_type : "Mu2e"
 
