@@ -36,7 +36,9 @@ physics : {
 //        hitsInputTag: "dsRegionFilter:dsregion"
 //        hitsInputTag: "dsFilter:DSVacuum"
 //        hitsInputTag: "compressDigiMCs:virtualdetector"
-        hitsInputTag: "cosmicFilter:crvStage1"
+        hitsInputTag: "cosmicFilter:CRV"
+//        hitsInputTag: "detectorFilter:CRV"
+//        hitsInputTag: "cosmicFilter:crvStage1"
 //        hitsInputTag: "g4run:tracker"
         TimeOffsets : { }
       }

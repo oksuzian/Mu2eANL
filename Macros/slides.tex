@@ -1,0 +1,97 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass{beamer} %
+\usetheme{CambridgeUS}
+\usepackage[latin1]{inputenc}
+\usefonttheme{professionalfonts}
+\usepackage{times}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage{verbatim}
+\usetikzlibrary{arrows,shapes}
+\author{Yuri Oksuzian}
+\title{CRY-Daya Bay comparison}
+\beamertemplatenavigationsymbolsempty
+
+
+\begin{document}
+
+
+  \foreach \gamma in{costhetalogY,
+costheta,
+crvinfomcprimaryElogY,
+crvinfomcprimaryE,
+crvinfomcprimaryPdgIdlogY,
+crvinfomcprimaryPdgId,
+crvinfomcprimaryXlogY,
+crvinfomcprimaryX,
+crvinfomcprimaryYlogY,
+crvinfomcprimaryY,
+crvinfomcprimaryZlogY,
+crvinfomcprimaryZ,
+crvinfomcprimaryZvsXgraph,
+crvinfomcx0logY,
+crvinfomcx0,
+crvinfomcy0logY,
+crvinfomcy0,
+crvinfomcz0logY,
+crvinfomcz0,
+crvinfomcz0vsx0graph,
+crvinfomcz0vsx0,
+crvinfomcz0vsy0graph,
+crvinfomcz0vsy0,
+deentd0logY,
+deentd0,
+deentmomlogY,
+deentmom,
+deenttdlogY,
+deenttd,
+deltadet0crvinfomctimelogY,
+deltadet0crvinfomctime,
+deltadet0CRVtimeWindowStartlogY,
+deltadet0CRVtimeWindowStart,
+deltatminusdemcprit0logy,
+deltatminusdemcprit0,
+deltatvsz,
+demcentd0logY,
+demcentd0,
+demcgent0logY,
+demcgent0,
+demcoposxvsoposz,
+demcoposyvsoposx,
+demcoposyvsoposz,
+demcprit0logY,
+demcprit0,
+dequaltrkQuallogY,
+dequaltrkQual,
+det0logY,
+det0minusdemcprit0logy,
+det0minusdemcprit0,
+det0,
+det0vscrvinfomctimegraph,
+det0vscrvinfomctime,
+det0vsCRVtimeWindowStartgraph,
+det0vsCRVtimeWindowStart,
+neutronKElogY,
+neutronKEnoCRVlogY,
+neutronKEnoCRV,
+neutronKE,
+noCRVdemcpdglogY,
+noCRVdemcpdg,
+thetavstandip} {
+
+    \begin{frame}{CRY-blue, Daya Bay-red : \gamma}
+      \begin{columns}        
+        \column{0.5\textwidth}
+        \includegraphics[width=6.cm]{standardizedPlots4/\gamma.pdf} 
+
+        \column{0.5\textwidth}
+        \includegraphics[width=6.cm]{standardizedPlots5/\gamma.pdf} 
+      \end{columns}
+    \end{frame}
+  }
+
+
+  
+
+
+\end{document}

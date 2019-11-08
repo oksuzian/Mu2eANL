@@ -1,0 +1,3 @@
+/pnfs/mu2e/persistent/users/oksuzian/workflow/cry_rs1_1019_g4_10_5/outstage/363672.fcllist_191019181515/00/00000/sim.oksuzian.minedep-filter-cat.cryconcat_rs1_1019.002701_00000000.art
+/pnfs/mu2e/persistent/users/oksuzian/workflow/cry_rs1_1019_g4_10_5/outstage/363672.fcllist_191019181515/00/00001/sim.oksuzian.minedep-filter-cat.cryconcat_rs1_1019.002701_00006962.art
+/pnfs/mu2e/persistent/users/oksuzian/workflow/cry_rs1_1019_g4_10_5/outstage/363672.fcllist_191019181515/00/00002/sim.oksuzian.minedep-filter-cat.cryconcat_rs1_1019.002701_00013876.art

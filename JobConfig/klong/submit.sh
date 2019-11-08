@@ -1,6 +1,7 @@
 #/bin/bash
+export MU2E_BASE_RELEASE
 setup mu2e
-source Offline/setup.sh
+source $MU2E_BASE_RELEASE/setup.sh
 setup mu2egrid
 setup mu2etools
 setup gridexport
@@ -9,8 +10,8 @@ setup dhtools
 MAINDIR=`pwd`
 MAKEFLC=0
 #STAGE=digi
-STAGE=reco
-#STAGE=planes_resampler
+#STAGE=reco
+STAGE=planes_resampler
 #STAGE=dsvacuum_resampler
 #STAGE=planes_filter
 
@@ -19,12 +20,12 @@ if [ "$STAGE" == "planes_analyzer" ]; then
     INFCL=fcl/planes_analyzer.fcl
     TAG=190803205659
 elif [ "$STAGE" == "planes_filter" ]; then
-    INLIST=prestage/beams1_0619.dsregion.txt
-    INFCL=fcl/planes_filter.fcl
-    TAG=190807230524
+    INLIST=Mu2eANL/JobConfig/FileLists/planes_filter.txt
+    INFCL=Mu2eANL/JobConfig/klong/planes_filter.fcl
+    TAG=190918211052
 elif [ "$STAGE" == "planes_resampler" ]; then
-    INFCL=fcl/planes_resampler.fcl
-    TAG=190808075558
+    INFCL=Mu2eANL/JobConfig/klong/planes_resampler.fcl
+    TAG=190919195932
 elif [ "$STAGE" == "dsvacuum_resampler" ]; then
     INFCL=fcl/dsvacuum_resampler.fcl
     TAG=190809124212
@@ -41,10 +42,10 @@ else
     exit
 fi
 
-DSCONF=beam${STAGE}_0619
-SETUPFN=./Offline/setup.sh
-WFPROJ=beam_0619
-CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.4RuQJ4MEaD/Code.tar.bz
+DSCONF=beam${STAGE}_0919
+SETUPFN=${MU2E_BASE_RELEASE}/setup.sh
+WFPROJ=beam_0919
+CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.oSuoKQRyet/Code.tar.bz
 
 OUTDIR=${DSCONF}_${TAG}
 
@@ -62,9 +63,9 @@ if [ "$STAGE" == "planes_analyzer" ]; then
 elif [ "$STAGE" == "planes_filter" ]; then
     (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=50 --embed ${MAINDIR}/${INFCL})
 elif [ "$STAGE" == "planes_resampler" ]; then
-    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --njobs=1000 --events-per-job=187903 --run=2705 --embed ${MAINDIR}/${INFCL} --aux=1:physics.filters.flashResample.fileNames:${MAINDIR}/prestage/planes_resampler_noG4filt.txt)
+    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --njobs=1000 --events-per-job=205600 --run=2705 --embed ${MAINDIR}/${INFCL} --aux=1:physics.filters.flashResample.fileNames:${MAINDIR}/Mu2eANL/JobConfig/FileLists/planes_resampler.txt)
 elif [ "$STAGE" == "dsvacuum_resampler" ]; then
-    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --njobs=1000 --events-per-job=66836 --run=2705 --embed ${MAINDIR}/${INFCL}  --aux=1:physics.filters.dsResample.fileNames:${MAINDIR}/prestage/dsvacuum_resampler_noG4.txt)
+    (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --njobs=1000 --events-per-job=66836 --run=2705 --embed ${MAINDIR}/${INFCL}  --aux=1:physics.filters.dsResample.fileNames:${MAINDIR}/)
 elif [ "$STAGE" == "digi" ]; then
     (cd backup/$OUTDIR && generate_fcl --desc=sim --dsowner=oksuzian --dsconf=$DSCONF --inputs=${MAINDIR}/${INLIST} --merge=2 --embed ${MAINDIR}/${INFCL})
 elif [ "$STAGE" == "reco" ]; then

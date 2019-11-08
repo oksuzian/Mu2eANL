@@ -1,0 +1,2 @@
+#include "JobConfig/common/artcat.fcl"
+outputs.out.fileName: "sim.DSOWNER.minedep-filter-cat.DSCONF.SEQ.art"

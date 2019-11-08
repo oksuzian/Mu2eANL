@@ -8,7 +8,7 @@
 #include "Mu2eG4/fcl/prolog.fcl"
 
 # Give this job a name.
-process_name : filterGapEvents
+process_name :  PlanesFilter
 
 source : {
    module_type : RootInput
@@ -16,7 +16,7 @@ source : {
 
 services : {
    message               : @local::default_message
-   TFileService          : { fileName : "nts.owner.filtered-minedep.version.sequencer.root" }
+   TFileService          : { fileName : "nts.owner.filtered-planes.version.sequencer.root" }
    RandomNumberGenerator : { }
    GeometryService        : { inputFile      : "Mu2eG4/geom/geom_common_crv_v07.txt" }
    ConditionsService      : { conditionsfile : "Mu2eG4/test/conditions_01.txt"      }
@@ -27,21 +27,14 @@ services : {
 
 physics : {
    filters: {
-	filterEdepCRV: {
-        module_type: FilterMinEdep
-        inputs : [ "cosmicFilter:CRV" ]
-	cutEDepMin: 0
-	cutEDepMax: 10
-   	}
-
-        filterLowEnergy: {
+	stepPointMomentumFilter: {
         module_type: FilterStepPointKinEnPDG
-        inputs : [ "cosmicFilter:crvStage1" ]
-        cutKEmin:  [ 10.,  10., 50, 50,  50 ] // drop particles that can't produce KL0 
-        pdgToDrop: [2112, 2212, 22, 11, -11 ] // drop particles PDGs
-        }
+        inputs : [ "dsRegionFilter:dsregion" ]
+        cutKEmin:  [500., 500., 80, 80,  80, 50,  50,  50,   50 ] // MeV/c to accommodate muons decaying into electrons with a momentum of 80 MeV/c
+        pdgToDrop: [2112, 2212, 22, 11, -11, 13, -13, 211, -211 ] // drop particles
+   	}
    }
-   trig: [filterEdep, filterLowEnergy]
+   trig: [stepPointMomentumFilter]
    outputs: [dsout]
    end_paths: [outputs]
    trigger_paths: [trig]
@@ -52,7 +45,7 @@ outputs: {
       module_type :  RootOutput
       SelectEvents:  ["trig"]
       outputCommands:["keep *_*_*_*"]
-      fileName    : "sim.owner.minedep-filter.version.sequencer.art"
+      fileName    : "sim.owner.planes-filter.version.sequencer.art"
    }
 }
 
