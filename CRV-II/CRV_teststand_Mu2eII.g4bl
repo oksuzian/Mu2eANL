@@ -1,0 +1,48 @@
+physics ShieldingM
+
+# cosmic rays nominally headed in the +Z direction
+#beamHeight - along the module length
+#beamWidth - along the module thickness
+#beamLength - along the module width
+cosmicraybeam nEvents=100000 beamZ=0.0 radius=1000 \
+beamHeight=200 beamWidth=50 beamLength=200
+#beamHeight=2000 beamWidth=1 beamLength=400
+
+#trackcuts keep=mu-,mu+,e-,e+
+trackcuts kill=gamma,neutron,proton,anti_nu_mu,nu_mu,anti_nu_e,nu_e
+
+param gap=1
+
+param barW=40
+param barL=20
+param barH=6000
+
+param alL=10
+param alH=6000
+param alW=($barW+$gap)*16
+
+param offset=-20
+param distToCosmics=0
+param virtThick=0.1
+
+# CRV bar
+#Virtual plane
+virtualdetector virt_plane width=$alW length=$virtThick height=6000.0 color=0,0,1 format=rootExtended
+
+# CRV absorbers
+box alum width=$alW height=$alH length=$alL material=Al color=0.75,0.75,0.75
+# CRV extrusion
+extrusion counter_vol length=6000 vertices=0,19.75;19.75,0;0,-19.75
+detector counter solid=counter_vol color=0.6,1,1 format=rootExtended
+
+do Y 0 3
+   place alum z=$distToCosmics+($barL+$alL)*$Y+5 x=$offset*$Y-$barW/2 rename=alum#
+   do X 0 615 41
+	place counter z=$distToCosmics+($barL+$alL)*$Y x=-$alW/2+$X+$offset*$Y rotation=Y90,Z270 rename=Det#
+	place counter z=$distToCosmics+($barL+$alL)*$Y-20 x=-$alW/2+$X+20+$offset*$Y rotation=Y270,Z270 rename=Det#
+   enddo
+enddo
+
+place virt_plane z=$distToCosmics+($barL+$alL)*0-20-$virtThick x=$offset*0 rename=plane1
+place virt_plane z=$distToCosmics+($barL+$alL)*3+10+$virtThick x=$offset*3-$barW/2 rename=plane2
+
