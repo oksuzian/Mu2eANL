@@ -1,0 +1,42 @@
+physics ShieldingM
+
+# cosmic rays nominally headed in the +Z direction
+cosmicraybeam nEvents=1000 beamZ=0.0 radius=100 \
+beamHeight=100 beamWidth=100 beamLength=100
+
+param alL=10
+param alH=6000
+param alW=842
+
+param barW=49
+param barL=20
+param barH=6000
+
+param offset=42
+
+# CRV bar
+detector Det width=$barW length=$barL height=$barH color=0,1,0 format=rootExtended
+
+virtualdetector virt_plane width=842 length=2 height=6000.0 color=0,0,1 format=rootExtended
+
+# CRV absorbers
+box Box width=$alW height=$alH length=$alL material=Al
+
+do Y 0 3
+   place Box z=200+($barL+$alL)*$Y+15 x=-400+400+$offset*$Y rename=Box#
+   do X 0 750 50
+	place Det z=200+($barL+$alL)*$Y x=-400+$X+$offset*$Y rename=Det#
+   enddo
+enddo
+
+place virt_plane z=200+(20+10)*0+15-20 x=-400+400+42*0 rename=plane1
+place virt_plane z=200+(20+10)*3+15+20 x=-400+400+42*3 rename=plane2
+
+# label the visualization
+label text="Example1.g4bl" 1200,0,-500
+
+#box Cherenkov1Front width=400 height=400 length=1 color=1,0,0 material=Al
+#virtualdetector Cherenkov1 width=400 height=400 length=20 color=0,0,1 material=C6F14
+
+extrusion s8 length=400 vertices=20,0;0,-20;-20,0
+place s8 z=200+(20+10)*3+15+20 x=-400+400+42*3 rename=plane2
