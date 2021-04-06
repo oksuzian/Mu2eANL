@@ -13,11 +13,11 @@ PROD=0
 USECODE=1
 MAKEFLC=0
 #STAGE=stage1
-STAGE=minedep_filter
+#STAGE=minedep_filter
 #STAGE=concat
 #STAGE=resampler
 #STAGE=digi
-#STAGE=reco
+STAGE=reco
 
 if [ "$STAGE" == "dsvacuum_analyzer" ]; then
     INLIST=submissionLists/beams1_0619_dsregion_filelist.txt
@@ -45,25 +45,28 @@ elif [ "$STAGE" == "resampler" ]; then
 
 elif [ "$STAGE" == "digi" ]; then
 #    INLIST=Mu2eANL/JobConfig/FileLists/cry0919_s1-resampled-dsvacuum.round8.txt
-    INLIST=Mu2eANL/JobConfig/FileLists/cry0919_s1-resampled-dsvacuum.upstream.round8.txt
+    INLIST=Mu2eANL/JobConfig/FileLists/sim.mu2e.cosmic-g4s1-cryresample-lo.191125.txt
+#    INLIST=Mu2eANL/JobConfig/FileLists/sim.mu2e.cosmic-g4s1-cryresample-hi.191125.txt
     INFCL=JobConfig/primary/CRY-offspill.fcl
-#    TAG=191028220434
-    TAG=191106104034 # upstream
+    TAG=210317221740 #lo
+#    TAG=210317143628 # hi
 
 elif [ "$STAGE" == "reco" ]; then
-    INLIST=Mu2eANL/JobConfig/FileLists/cry0919_digi.round8.upstream.txt
-    INFCL=JobConfig/reco/mcdigis_CRY.fcl
-    TAG=191106213751
+    INLIST=Mu2eANL/JobConfig/FileLists/dig.oksuzian.CRY-cosmic-general.cry3-digi-lo.txt # lo
+#    INLIST=Mu2eANL/JobConfig/FileLists/dig.oksuzian.CRY-cosmic-general.cry3-digi-hi.txt # hi
+    INFCL=JobConfig/reco/mcdigis-trig_CRY.fcl
+    TAG=210318085344 #lo
+#    TAG=210318062539 #hi
 else
     echo "Not a valid stage"
     exit
 fi
 
-DSCONF=cry-${STAGE}-10-5
+DSCONF=cry3-${STAGE}-lo
 SETUPFN=${MU2E_BASE_RELEASE}/setup.sh
 WFPROJ=cry_rs1_1019_g4_10_5
 #/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.48Ufqzb95I/Code.tar.bz
-CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.gCkGshOuDY/Code.tar.bz
+CODE=/pnfs/mu2e/resilient/users/oksuzian/gridexport/tmp.mY65chsbxA/Code.tar.bz
 
 OUTDIR=${DSCONF}_${TAG}
 
@@ -115,7 +118,7 @@ BN=`basename $SF | cut -d. -f 1`
 JN="${BN}_${TAG}"
 LN=logs/submit_${JN}.log
 
-RESOURCE="--disk=20GB --memory=1750MB"
+RESOURCE="--disk=20GB --memory=3750MB"
 if [ "$STAGE" == "stage1" ] || [ "$STAGE" == "resampler" ]; then
     RESOURCE="--disk=20GB --memory=3500MB"
 elif [ "$STAGE" == "minedep_filter" ]; then
@@ -136,7 +139,7 @@ fi
 #   --resource-provides=usage_model=OFFSITE --site=BNL,Caltech,FNAL,FermiGrid,Nebraska,Omaha,SU-OG,Wisconsin,UCSD,NotreDame"
 #   --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC"
 command="mu2eprodsys --clustername="${JN}" --fcllist=$SF --wfproject=$WFPROJ --dsconf=$DSCONF \
-   --dsowner=oksuzian --OS=SL7 ${RESOURCE} --expected-lifetime=23h ${SETUP} ${SETPROD} \
+   --dsowner=oksuzian  ${RESOURCE} --expected-lifetime=23h ${SETUP} ${SETPROD} \
    --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE --site=BNL,Caltech,FNAL,FermiGrid,Nebraska,Omaha,SU-OG,Wisconsin,UCSD,NotreDame"
 
 echo "Submitting: " $command

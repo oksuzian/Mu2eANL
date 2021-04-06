@@ -157,7 +157,8 @@ namespace mu2e{
       else{
       _toff.updateMap(event);
       std::cout << "Filling CRV pulses" << std::endl;
-      CRVAnalysis::FillCrvPulseInfoCollections(_conf.crvRecoPulseLabel(), _conf.crvWaveformsModuleLabel(), _conf.crvDigiModuleLabel(),                                               _toff, event, _crvpulseinfo, _crvpulseinfomc, _crvwaveforminfo);
+      CRVAnalysis::FillCrvPulseInfoCollections(_conf.crvRecoPulseLabel(), _conf.crvWaveformsModuleLabel(), _conf.crvDigiModuleLabel(),
+                                               _toff, event, _crvpulseinfo, _crvpulseinfomc, _crvwaveforminfo);
       }
     }
 

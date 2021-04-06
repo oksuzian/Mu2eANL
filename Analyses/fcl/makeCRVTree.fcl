@@ -34,31 +34,29 @@ physics : {
       }
     crvtree: {
         module_type : CRVAnalysisTree
-
-
-	CrvCoincidenceModuleLabel : "SelectRecoMC"
-        CrvCoincidenceMCModuleLabel : "compressRecoMCs"
+//	CrvCoincidenceModuleLabel : "SelectRecoMC"
+//        CrvCoincidenceMCModuleLabel : "compressRecoMCs"
         CrvRecoPulseLabel : "CrvRecoPulses"
-        CrvStepPointMCLabel : "compressRecoMCs"
-        SimParticleLabel : "compressRecoMCs"
-        MCTrajectoryLabel : "compressRecoMCs"
-        CrvWaveformsModuleLabel : "compressRecoMCs"
+        CrvStepPointMCLabel : "compressRedoMCs"
+        SimParticleLabel : "compressRedoMCs"
+        MCTrajectoryLabel : ""
+        CrvWaveformsModuleLabel : "compressRedoMCs"
         CrvDigiModuleLabel : "CrvDigi"
         CrvPlaneY : 2653
-        FillMCInfo : false
+        FillMCInfo : true
 
 	CrvCoincidenceModuleLabel   : "CrvCoincidenceClusterFinder"
 	CrvCoincidenceMCModuleLabel : "CrvCoincidenceClusterMatchMC"
-	BeamIntensity 	            : "protonBunchIntensity"
-	CrvWaveformsModuleLabel     : "CrvWaveforms"
+//	BeamIntensity 	            : "protonBunchIntensity"
+	BeamIntensity 	            : ""
 //        TimeOffsets                 : { inputs : [ @sequence::CommonMC.TimeMaps ] }
-        TimeOffsets                 : { inputs : [""] }
-	SignalWindowStartTime : 700
-	SignalWindowEndTime   : 1705
-//	IgnoreUE   	      : true
+//	TimeOffsets                 : { inputs : [@sequence::RecoCompression.TimeMaps]}
+	TimeOffsets                 : { inputs : [@sequence::DigiCompression.TimeMaps]}
+	SignalWindowStartTime       : 500
+	SignalWindowEndTime         : 1705
+	deadTimeWindowEndMargin     : 170
       }
    }
-//   an: [ genCountLogger, crvtree ]
    an: [ crvtree ]
    end_paths: [an]
 }
