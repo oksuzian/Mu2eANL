@@ -131,8 +131,6 @@ namespace mu2e{
 
   void CRVAnalysisTree::analyze(const art::Event& event){
 
-    if(_conf.fillmc())
-      _toff.updateMap(event);
     resetBranches();
     // fill basic event information
     _einfo._eventid = event.event();
@@ -140,15 +138,29 @@ namespace mu2e{
     _einfo._subrunid = event.subRun();
 
     // mean number of protons on target
-    auto ih = event.getValidHandle<ProtonBunchIntensity>(_conf.meanPBItag());
-    _einfo._nprotons = ih->intensity();
+    if(_conf.meanPBItag()!=""){
+      auto ih = event.getValidHandle<ProtonBunchIntensity>(_conf.meanPBItag());
+      _einfo._nprotons = ih->intensity();
+    }
 
     CRVAnalysis::FillCrvHitInfoCollections(_conf.crvCoincidenceModuleLabel(), _conf.crvCoincidenceMCModuleLabel(),
                                            _conf.crvRecoPulseLabel(), _conf.crvStepPointMCLabel(), _conf.simParticleLabel(), _conf.mcTrajectoryLabel(), event,
                                            _crvinfo, _crvinfomc, _crvsummary, _crvsummarymc, _crvinfomcplane, _conf.crvPlaneY());
 
-    CRVAnalysis::FillCrvPulseInfoCollections(_conf.crvRecoPulseLabel(), _conf.crvWaveformsModuleLabel(), _conf.crvDigiModuleLabel(),
-                                             _toff, event, _crvpulseinfo, _crvpulseinfomc, _crvwaveforminfo);
+    if(_conf.fillmc()){
+      art::Handle<SimParticleTimeMap>  handle;
+      event.getByLabel("cosmicTimeMap", handle); // FIXME!!!
+      if (!handle.isValid()) {
+        printf(">>> ERROR: No valid time maps!!!");
+        printf("Event ID: %d \n", event.event());
+      }
+      else{
+      _toff.updateMap(event);
+      std::cout << "Filling CRV pulses" << std::endl;
+      CRVAnalysis::FillCrvPulseInfoCollections(_conf.crvRecoPulseLabel(), _conf.crvWaveformsModuleLabel(), _conf.crvDigiModuleLabel(),                                               _toff, event, _crvpulseinfo, _crvpulseinfomc, _crvwaveforminfo);
+      }
+    }
+
     //Calculate deadtime
     _deadtime1 = getDeadTime(_crvinfo, false);
     _deadtime2 = getDeadTime(_crvinfo, true);
@@ -178,22 +190,22 @@ namespace mu2e{
 
       double fakeT0 = 9999;
       while (fakeT0>_conf.signalWindowEndTime())
-	fakeT0 = _conf.signalWindowStartTime() + _randExpo.fire(meanMuonLife_);
+        fakeT0 = _conf.signalWindowStartTime() + _randExpo.fire(meanMuonLife_);
       _fakeT0 = fakeT0;
 
       bool vetoed = false;
       for(auto i : _crvinfo){
-	if(ignoreUE && (i._crvSectorType == 4 || i._crvSectorType == 5))
-	  continue;
-	double endVeto = i._timeWindowEnd + _conf.deadTimeWindow();
-	double startVeto = i._timeWindowStart;
-	if( fakeT0 > startVeto && fakeT0 < endVeto ){
-	  vetoed = true;
-	  break;
-	}
+        if(ignoreUE && (i._crvSectorType == 4 || i._crvSectorType == 5))
+          continue;
+        double endVeto = i._timeWindowEnd + _conf.deadTimeWindow();
+        double startVeto = i._timeWindowStart;
+        if( fakeT0 > startVeto && fakeT0 < endVeto ){
+          vetoed = true;
+          break;
+        }
       }
       if(vetoed)
-	deadcounter += step_size;
+        deadcounter += step_size;
     }
     return deadcounter/(step_size*nsteps);
   }
