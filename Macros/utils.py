@@ -32,7 +32,7 @@ class Utils:
     print("LIVETIME_HI: %e" % self.LIVETIME_HI)
     print("LIVETIME_LO: %e" % self.LIVETIME_LO)
     
-  def getVarList(list_name):
+  def getVarList(self, list_name):
     
     if list_name=="all":
       list = {'crvinfo__x': [-8000, 1000], 
