@@ -33,6 +33,7 @@ class Utils:
     print("LIVETIME_LO: %e" % self.LIVETIME_LO)
     
   def getVarList(self, list_name):
+    list = 'N/A'
     
     if list_name=="all":
       list = {'crvinfo__x': [-8000, 1000], 
@@ -123,4 +124,4 @@ class Utils:
               'deent_d0_om' : 'Max transverse radius',
               'is_cosmic':'cosmic status'}
 
-    return list_name
+    return list
